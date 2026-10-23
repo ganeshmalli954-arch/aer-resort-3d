@@ -40,8 +40,11 @@
 | `E` | Toggle **Exploded Cutaway View** (Lifts Roof & Floors) |
 | `W` | Toggle **Wireframe CAD Mesh** |
 | `L` | Cycle **Lighting Mode** (Golden Sunset ➔ Night LEDs ➔ Studio Day) |
+| `A` | Toggle **Auto-Rotate 360°** |
 | `G` | **Export 3D Model (.GLB)** for Blender & 3D software |
-| `R` | Reset Camera to Front Elevation |
+| `R` | **Reset Camera** to Front Elevation (0°) |
+| `M` | Switch between **Luxury Villa 3D** & **Master Site Plan 3D** |
+| `1` – `8` | Direct jump to **Room / Side 1 to 8** |
 | `Esc` | Close Drawer or Lightbox Modal |
 
 ---

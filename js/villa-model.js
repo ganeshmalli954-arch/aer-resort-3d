@@ -426,7 +426,6 @@ class VillaModel {
                 roughness: 0.05,
                 metalness: 0.1,
                 transmission: 0.88,
-                thickness: 0.35,
                 clearcoat: 1.0,
                 clearcoatRoughness: 0.08,
             }),

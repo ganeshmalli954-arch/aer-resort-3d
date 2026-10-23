@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ── 2. Initialize 3D Engine & Scroll Controller ── */
     const villaModel = new VillaModel();
     const scrollController = new ScrollAnimationController(villaModel);
+    window.villaModel = villaModel;
+    window.scrollController = scrollController;
 
     /* ── 3. Preloader Dismissal ── */
     const preloader = document.getElementById('preloader');
@@ -50,11 +52,41 @@ document.addEventListener('DOMContentLoaded', () => {
             villaModel.setMode('villa');
             if (roomDock) roomDock.style.display = '';
             if (inspectionCard) inspectionCard.style.display = '';
+            scrollController.updatePhaseUI(scrollController.currentPhaseIndex >= 0 ? scrollController.currentPhaseIndex : 0);
             showToast('Mode: Luxury Villa 3D (225 sqft Cottage)');
         } else {
             btnModeResort.classList.add('active');
             btnModeVilla.classList.remove('active');
             villaModel.setMode('resort');
+            if (roomDock) roomDock.style.display = 'none';
+            if (inspectionCard) {
+                inspectionCard.style.display = '';
+                const cardBadge = document.getElementById('card-badge');
+                const cardTitle = document.getElementById('card-title');
+                const cardSubtitle = document.getElementById('card-subtitle');
+                const cardDesc = document.getElementById('card-desc');
+                const cardSpecs = document.getElementById('card-specs');
+                const cardRefImg = document.getElementById('card-ref-img');
+
+                if (cardBadge) cardBadge.textContent = 'MASTER SITE PLAN';
+                if (cardTitle) cardTitle.textContent = '2.5 Acre Eco Resort Layout';
+                if (cardSubtitle) cardSubtitle.textContent = 'Ashushri Creations • Balasore, Odisha';
+                if (cardDesc) cardDesc.textContent = 'Master architectural layout designed for Promoter Biswajeet Ghosh. Features 10 luxury private cottages (225 sqft each) along the central garden promenade, an 1,800 sqft resort pool with sunken lounge, 2,000 sqft grand banquet hall, eco treehouse, authentic mud huts, bonfire pit, and landscaped water fountain.';
+                if (cardSpecs) {
+                    cardSpecs.innerHTML = [
+                        '<span class="spec-tag">🏡 10 Luxury Cottages</span>',
+                        '<span class="spec-tag">🏊 1,800 sqft Main Pool</span>',
+                        '<span class="spec-tag">🏛️ 2,000 sqft Banquet Hall</span>',
+                        '<span class="spec-tag">🌲 Eco Treehouse & Mud Huts</span>',
+                        '<span class="spec-tag">🔥 Bonfire Gathering Pit</span>',
+                        '<span class="spec-tag">⛲ Central Water Fountain</span>'
+                    ].join('');
+                }
+                if (cardRefImg) {
+                    cardRefImg.src = 'assets/plan/master-plan.png';
+                    cardRefImg.alt = 'Ashushri Creations Master Layout Plan';
+                }
+            }
             showToast('Mode: 2.5 Acre Master Plan (Ashushri Creations)');
         }
     }
@@ -308,8 +340,18 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'l':
                 cycleLighting();
                 break;
-            case 'r':
+            case 'a':
                 toggleAutoRotate();
+                break;
+            case 'r':
+                if (villaModel.isFreeOrbit) {
+                    toggleOrbitMode();
+                }
+                scrollController.jumpToPhase(0);
+                showToast('Reset Camera to Front Elevation (0°)');
+                break;
+            case 'g':
+                if (btnExportGlb) btnExportGlb.click();
                 break;
             case 'm':
                 setMode(villaModel.activeMode === 'villa' ? 'resort' : 'villa');

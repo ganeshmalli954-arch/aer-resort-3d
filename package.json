@@ -5,7 +5,8 @@
   "main": "index.html",
   "scripts": {
     "start": "npx live-server --port=3000 --open",
-    "dev": "npx live-server --port=3000 --open --wait=500"
+    "dev": "npx live-server --port=3000 --open --wait=500",
+    "test": "node test/verify.mjs"
   },
   "keywords": ["3d", "villa", "resort", "scroll-animation", "threejs"],
   "author": "AER",

@@ -274,19 +274,16 @@ class ScrollAnimationController {
         const phase = this.phases[phaseIndex];
         if (!phase) return;
 
-        // Animate card content transition with GSAP
-        if (typeof gsap !== 'undefined') {
-            gsap.to(this.elements.card, {
-                opacity: 0.7,
-                y: 6,
-                duration: 0.15,
-                onComplete: () => {
-                    this.setCardContent(phase);
-                    gsap.to(this.elements.card, { opacity: 1, y: 0, duration: 0.25 });
-                }
-            });
-        } else {
-            this.setCardContent(phase);
+        // Synchronously set content immediately to avoid race conditions during fast scrolling/jumping
+        this.setCardContent(phase);
+
+        // Animate card content transition with GSAP cleanly
+        if (typeof gsap !== 'undefined' && this.elements.card) {
+            gsap.killTweensOf(this.elements.card);
+            gsap.fromTo(this.elements.card,
+                { opacity: 0.8, y: 3 },
+                { opacity: 1, y: 0, duration: 0.22, ease: 'power2.out' }
+            );
         }
 
         // Update active state in Left Room Dock
