@@ -1,0 +1,13 @@
+{
+  "name": "aer-resort-3d",
+  "version": "1.0.0",
+  "description": "Anandamayee Eco Resort — Scroll-Driven 3D Villa Experience",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx live-server --port=3000 --open",
+    "dev": "npx live-server --port=3000 --open --wait=500"
+  },
+  "keywords": ["3d", "villa", "resort", "scroll-animation", "threejs"],
+  "author": "AER",
+  "license": "ISC"
+}
