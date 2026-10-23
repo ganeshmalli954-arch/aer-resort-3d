@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AER — Anandamayee Eco Resort | Luxury 3D Villa Experience</title>
+    <title>AER — Anandamayee Eco Resort | 3D Villa Model Explorer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Montserrat:wght@200;300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="model-viewer-body">
+
     <!-- PRELOADER -->
     <div id="preloader">
         <div class="preloader-inner">
             <div class="preloader-logo">AER</div>
             <div class="preloader-bar"><div class="preloader-fill"></div></div>
-            <p class="preloader-text">Loading 3D Architectural Model & Textures...</p>
+            <p class="preloader-text">Loading 3D Architectural Model & Procedural Shaders...</p>
         </div>
     </div>
 
@@ -23,497 +24,330 @@
     <div class="cursor-dot"></div>
     <div class="cursor-ring"></div>
 
-    <!-- NAVIGATION -->
-    <nav id="main-nav">
-        <div class="nav-logo">
-            <img src="assets/images/logo.jpeg" alt="AER Logo" class="nav-logo-img">
-        </div>
-        <div class="nav-links">
-            <a href="#hero" class="nav-link active" data-section="hero">Home</a>
-            <a href="#about" class="nav-link" data-section="about">About</a>
-            <a href="#blueprint" class="nav-link" data-section="blueprint">Master Plan</a>
-            <a href="#cottages" class="nav-link" data-section="cottages">3D Villa Model</a>
-            <a href="#moodboard" class="nav-link" data-section="moodboard">Design Inspo</a>
-            <a href="#gallery" class="nav-link" data-section="gallery">Site Gallery</a>
-            <a href="#amenities" class="nav-link" data-section="amenities">Amenities</a>
-            <a href="#contact" class="nav-link" data-section="contact">Contact</a>
-        </div>
-        <button class="nav-menu-btn" aria-label="Toggle menu">
-            <span></span><span></span><span></span>
-        </button>
-    </nav>
+    <!-- FULLSCREEN 3D WEBGL CANVAS -->
+    <canvas id="villa-canvas"></canvas>
 
-    <!-- MOBILE MENU -->
-    <div id="mobile-menu">
-        <div class="mobile-menu-inner">
-            <a href="#hero" class="mobile-link">Home</a>
-            <a href="#about" class="mobile-link">About</a>
-            <a href="#blueprint" class="mobile-link">Master Plan</a>
-            <a href="#cottages" class="mobile-link">3D Villa Model</a>
-            <a href="#moodboard" class="mobile-link">Design Inspo</a>
-            <a href="#gallery" class="mobile-link">Site Gallery</a>
-            <a href="#amenities" class="mobile-link">Amenities</a>
-            <a href="#contact" class="mobile-link">Contact</a>
+    <!-- FLOATING TOP HUD -->
+    <header id="top-hud">
+        <div class="hud-left">
+            <div class="brand-badge">
+                <img src="assets/images/logo.jpeg" alt="AER Emblem" class="brand-logo-img">
+                <div class="brand-info">
+                    <span class="brand-title">ANANDAMAYEE ECO RESORT</span>
+                    <span class="brand-subtitle">Dedicated 3D Architectural Explorer • Balasore, Odisha</span>
+                </div>
+            </div>
+            
+            <div class="model-mode-switch">
+                <button class="mode-btn active" data-mode="villa" id="btn-mode-villa" title="Inspect detailed Luxury Cottage (225 sqft)">
+                    <span class="btn-icon">🏡</span> Luxury Villa 3D
+                </button>
+                <button class="mode-btn" data-mode="resort" id="btn-mode-resort" title="Inspect 2.5 Acre Master Plan (Ashushri Creations)">
+                    <span class="btn-icon">🗺️</span> Master Site Plan 3D
+                </button>
+            </div>
+        </div>
+
+        <div class="hud-right">
+            <!-- Navigation Mode Toggle -->
+            <button class="hud-tool-btn" id="btn-toggle-orbit" title="Toggle Free 3D Orbit / Scroll Tour (Shortcut: Space or O)">
+                <span class="tool-icon" id="orbit-icon">🕹️</span>
+                <span class="tool-label" id="orbit-label">Free Orbit</span>
+            </button>
+
+            <!-- Exploded Cutaway Toggle -->
+            <button class="hud-tool-btn" id="btn-toggle-exploded" title="Exploded Cutaway View (Shortcut: E)">
+                <span class="tool-icon">💥</span>
+                <span class="tool-label">Exploded</span>
+            </button>
+
+            <!-- Wireframe Toggle -->
+            <button class="hud-tool-btn" id="btn-toggle-wireframe" title="Toggle Wireframe CAD Mesh (Shortcut: W)">
+                <span class="tool-icon">📐</span>
+                <span class="tool-label">Wireframe</span>
+            </button>
+
+            <!-- Lighting Mode Cycle -->
+            <button class="hud-tool-btn" id="btn-cycle-lighting" title="Cycle Lighting: Golden Sunset / Luxury Night / Studio Day (Shortcut: L)">
+                <span class="tool-icon" id="lighting-icon">🌅</span>
+                <span class="tool-label" id="lighting-label">Golden</span>
+            </button>
+
+            <!-- Auto Rotate 360 -->
+            <button class="hud-tool-btn" id="btn-auto-rotate" title="Auto-Rotate 360°">
+                <span class="tool-icon">🔄</span>
+                <span class="tool-label">Spin</span>
+            </button>
+
+            <!-- Download / Export 3D Model GLTF/GLB -->
+            <button class="hud-tool-btn hud-btn-gold" id="btn-export-glb" title="Download Raw 3D Model (.GLB) for Blender, 3ds Max, or 3D CAD">
+                <span class="tool-icon">💾</span>
+                <span class="tool-label">Export 3D (.GLB)</span>
+            </button>
+
+            <!-- Reference Drawer Toggle -->
+            <button class="hud-tool-btn" id="btn-open-refs" title="View Telegram Reference Photos & Walkthrough Video">
+                <span class="tool-icon">📷</span>
+                <span class="tool-label">References</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- FLOATING LEFT ARCHITECTURAL ROOM / SIDE PRESET DOCK -->
+    <aside id="room-dock" class="glass-panel">
+        <div class="dock-header">
+            <span class="dock-heading">INSPECT SIDES & ROOMS</span>
+            <span class="dock-shortcut-hint">Click to jump</span>
+        </div>
+        <div class="dock-items">
+            <button class="room-btn active" data-phase="0" data-hotspot="front">
+                <span class="room-icon">🏡</span>
+                <span class="room-text">
+                    <strong>Front Solarium & Teak Deck</strong>
+                    <small>0° • Main Exterior Elevation</small>
+                </span>
+            </button>
+            <button class="room-btn" data-phase="1" data-hotspot="infinityPool">
+                <span class="room-icon">🌊</span>
+                <span class="room-text">
+                    <strong>Infinity Plunge Pool</strong>
+                    <small>45° • East Horizon View</small>
+                </span>
+            </button>
+            <button class="room-btn" data-phase="2" data-hotspot="exploded">
+                <span class="room-icon">💥</span>
+                <span class="room-text">
+                    <strong>Exploded Cutaway View</strong>
+                    <small>135° • Structural Cross-Section</small>
+                </span>
+            </button>
+            <button class="room-btn" data-phase="3" data-hotspot="masterSuite">
+                <span class="room-icon">🛏️</span>
+                <span class="room-text">
+                    <strong>Mezzanine Master Suite</strong>
+                    <small>180° • Fluted Oak & LED Cove</small>
+                </span>
+            </button>
+            <button class="room-btn" data-phase="4" data-hotspot="bathroom">
+                <span class="room-icon">🛁</span>
+                <span class="room-text">
+                    <strong>Calacatta Spa Washroom</strong>
+                    <small>240° • Italian Marble & Moss</small>
+                </span>
+            </button>
+            <button class="room-btn" data-phase="5" data-hotspot="sunkenLounge">
+                <span class="room-icon">🛋️</span>
+                <span class="room-text">
+                    <strong>Sunken Living Lounge</strong>
+                    <small>300° • Japanese Tree Courtyard</small>
+                </span>
+            </button>
+            <button class="room-btn" data-phase="6" data-hotspot="floatingStairs">
+                <span class="room-icon">🪵</span>
+                <span class="room-text">
+                    <strong>Floating Eurostairs</strong>
+                    <small>340° • Cantilevered Oak Steps</small>
+                </span>
+            </button>
+            <button class="room-btn" data-phase="7" data-hotspot="aerial">
+                <span class="room-icon">🦅</span>
+                <span class="room-text">
+                    <strong>Complete 360° Overview</strong>
+                    <small>360° • Re-assembled Model</small>
+                </span>
+            </button>
+        </div>
+
+        <!-- Exploded View Lift Scrubber -->
+        <div class="exploded-scrubber-box">
+            <div class="scrubber-label">
+                <span>CUTAWAY ROOF LIFT</span>
+                <strong id="cutaway-val">0%</strong>
+            </div>
+            <input type="range" id="cutaway-slider" min="0" max="100" value="0" class="glass-range">
+        </div>
+    </aside>
+
+    <!-- FLOATING RIGHT ARCHITECTURAL INSPECTION CARD -->
+    <article id="inspection-card" class="glass-panel">
+        <div class="card-top">
+            <span class="card-badge" id="card-badge">EXTERIOR ELEVATION</span>
+            <button class="card-minimize-btn" id="btn-minimize-card" title="Toggle Card Visibility">
+                <span class="minimize-icon">✕</span>
+            </button>
+        </div>
+
+        <h2 class="card-title" id="card-title">Private Teak Deck & Entrance</h2>
+        <p class="card-subtitle" id="card-subtitle">South Elevation • Ground Level Indoor-Outdoor Living</p>
+
+        <p class="card-desc" id="card-desc">
+            Cantilevered timber eaves with dark standing seams. Frameless floor-to-ceiling glass sliders seamlessly connect the sunken living space to a private weathered teak sun deck, equipped with an integrated infinity plunge pool, twin minimalist loungers, and ambient underwater aquatic illumination.
+        </p>
+
+        <!-- Reference Photo Thumbnail -->
+        <div class="card-reference-thumb" id="card-ref-box" title="Click to view high-res reference photo">
+            <img src="assets/references/photo_2026-10-23_13-05-38.jpg" alt="Reference Photo" id="card-ref-img">
+            <div class="ref-overlay">
+                <span class="ref-overlay-text">🔍 Inspect Telegram reference photo</span>
+            </div>
+        </div>
+
+        <!-- Architectural Specs & Materials -->
+        <div class="card-specs-container">
+            <span class="specs-title">ARCHITECTURAL SPECIFICATIONS</span>
+            <div class="card-specs" id="card-specs">
+                <span class="spec-tag">🪵 Weathered Teak Planks</span>
+                <span class="spec-tag">🏊 Private Plunge Pool</span>
+                <span class="spec-tag">🪟 Frameless Glass Sliders</span>
+                <span class="spec-tag">✨ Floating LED Underglow</span>
+            </div>
+        </div>
+
+        <div class="card-footer-meta">
+            <span class="meta-item">📐 <strong>Footprint:</strong> 225 sqft</span>
+            <span class="meta-item">🏗️ <strong>Design:</strong> Ashushri</span>
+            <span class="meta-item">📍 <strong>Site:</strong> Balasore, Odisha</span>
+        </div>
+    </article>
+
+    <!-- FLOATING BOTTOM TIMELINE & 360° SCRUBBER HUD -->
+    <footer id="bottom-hud" class="glass-panel">
+        <div class="hud-timeline-wrapper">
+            <div class="timeline-meta">
+                <div class="meta-angle">
+                    <span class="angle-label">MODEL ORIENTATION:</span>
+                    <strong class="angle-val" id="hud-angle-val">0° — FRONT ELEVATION</strong>
+                </div>
+                <div class="meta-mode-hint" id="hud-hint">
+                    🖱️ Scroll mouse wheel or drag timeline scrubber to rotate villa 360°
+                </div>
+            </div>
+
+            <div class="timeline-bar-container">
+                <input type="range" id="timeline-scrubber" min="0" max="1000" value="0" class="glass-timeline">
+                <div class="timeline-ticks">
+                    <span class="tick" style="left: 0%;">0° Front</span>
+                    <span class="tick" style="left: 14%;">45° Pool</span>
+                    <span class="tick" style="left: 28%;">135° Cutaway</span>
+                    <span class="tick" style="left: 42%;">180° Suite</span>
+                    <span class="tick" style="left: 56%;">240° Spa Bath</span>
+                    <span class="tick" style="left: 70%;">300° Lounge</span>
+                    <span class="tick" style="left: 84%;">340° Stairs</span>
+                    <span class="tick" style="left: 100%;">360° Overview</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- TELEGRAM REFERENCES COMPARISON DRAWER -->
+    <aside id="reference-drawer" class="glass-drawer">
+        <div class="drawer-header">
+            <div class="drawer-title-group">
+                <h3>📷 Telegram Reference Materials (23rd Oct)</h3>
+                <p>Downloaded from WhatsApp & Telegram • Replicated in 3D Model</p>
+            </div>
+            <button class="drawer-close-btn" id="btn-close-refs">✕</button>
+        </div>
+
+        <div class="drawer-content">
+            <!-- Walkthrough Video -->
+            <div class="ref-video-card glass-subcard">
+                <h4>🎥 Multi-Level Architecture Walkthrough Video</h4>
+                <p>Reference video showing double-height volume, glass mezzanine, floating stairs, and fluted acoustic wall.</p>
+                <video controls poster="assets/references/photo_2026-10-23_13-05-50.jpg" class="drawer-video">
+                    <source src="assets/references/video_2026-10-23_13-05-51.mp4" type="video/mp4">
+                    Your browser does not support HTML5 video.
+                </video>
+            </div>
+
+            <!-- Master Plan -->
+            <div class="ref-image-card glass-subcard">
+                <div class="ref-img-wrap">
+                    <img src="assets/plan/master-plan.png" alt="Ashushri Creations Master Layout Plan">
+                </div>
+                <div class="ref-caption">
+                    <h4>Ashushri Creations Master Layout Plan</h4>
+                    <p>Balasore, Odisha. Promoter: Biswajeet Ghosh. 10 luxury cottages (225 sqft each), 1,800 sqft pool, banquet hall, treehouse, mud huts, campfire.</p>
+                </div>
+            </div>
+
+            <!-- Reference Gallery Grid -->
+            <div class="drawer-grid">
+                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-43.jpg" data-title="Master Suite Bedroom">
+                    <img src="assets/references/photo_2026-10-23_13-05-43.jpg" alt="Master Suite with Fluted Wood">
+                    <div class="ref-grid-info">
+                        <strong>Master Suite Fluted Wood</strong>
+                        <p>Dark acoustic slats with warm recessed LED cove backlighting.</p>
+                    </div>
+                </div>
+
+                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-59.jpg" data-title="Cantilevered Floating Stairs">
+                    <img src="assets/references/photo_2026-10-23_13-05-59.jpg" alt="Eurostairs Cantilevered Floating Stairs">
+                    <div class="ref-grid-info">
+                        <strong>Cantilevered Floating Stairs</strong>
+                        <p>Solid oak floating steps with under-tread LED strips and glass rail.</p>
+                    </div>
+                </div>
+
+                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-42.jpg" data-title="Italian Calacatta Spa Bath">
+                    <img src="assets/references/photo_2026-10-23_13-05-42.jpg" alt="Freestanding Soaking Tub">
+                    <div class="ref-grid-info">
+                        <strong>Italian Calacatta Spa Bath</strong>
+                        <p>Matte-black soaking tub, gold marble, and brass brushed tapware.</p>
+                    </div>
+                </div>
+
+                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-50.jpg" data-title="Sunken Lounge & Courtyard Tree">
+                    <img src="assets/references/photo_2026-10-23_13-05-50.jpg" alt="Sunken Living Room with Japanese Tree">
+                    <div class="ref-grid-info">
+                        <strong>Sunken Lounge & Courtyard Tree</strong>
+                        <p>Double-height conversation pit with indoor Japanese ficus lightwell.</p>
+                    </div>
+                </div>
+
+                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-37.jpg" data-title="Preserved Living Moss Wall">
+                    <img src="assets/references/photo_2026-10-23_13-05-37.jpg" alt="Living Moss Vanity Wall">
+                    <div class="ref-grid-info">
+                        <strong>Preserved Living Moss Wall</strong>
+                        <p>Vertical organic moss vanity wall with backlit floating mirror.</p>
+                    </div>
+                </div>
+
+                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-38.jpg" data-title="Infinity Plunge Pool & Teak Deck">
+                    <img src="assets/references/photo_2026-10-23_13-05-38.jpg" alt="Infinity Plunge Pool Deck">
+                    <div class="ref-grid-info">
+                        <strong>Infinity Plunge Pool & Teak Deck</strong>
+                        <p>Weathered teak solarium with infinity water horizon and twin loungers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- TOAST / NOTIFICATION -->
+    <div id="toast" class="glass-toast">
+        <span class="toast-icon">✓</span>
+        <span class="toast-msg" id="toast-msg">Model updated</span>
+    </div>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="lightbox-modal" class="glass-modal">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="btn-close-modal">✕</button>
+            <img src="" alt="Full Reference" id="modal-img">
+            <p id="modal-caption"></p>
         </div>
     </div>
 
-    <!-- 3D CANVAS (Fixed in background) -->
-    <canvas id="villa-canvas"></canvas>
-
-    <!-- SCROLL CONTENT -->
-    <main id="scroll-container">
-
-        <!-- SECTION 1: HERO -->
-        <section id="hero" class="section">
-            <div class="hero-content">
-                <div class="hero-badge glass-card-micro">BALASORE, ODISHA • EST. 2026</div>
-                <h1 class="hero-title">
-                    <span class="title-line">Anandamayee</span>
-                    <span class="title-line accent">Eco Resort</span>
-                </h1>
-                <p class="hero-tagline">Nature. Serenity. Sustainability.</p>
-                <p class="hero-subtitle">An ultra-luxury coastal sanctuary where biophilic architecture meets the Bay of Bengal. Featuring handcrafted eco-villas with fluted timber, Calacatta gold stone, private infinity plunge pools, and sunken garden lounges.</p>
-                <div class="hero-cta">
-                    <a href="#cottages" class="btn btn-primary glass-btn">Explore 3D Villa</a>
-                    <a href="#blueprint" class="btn btn-secondary">Master Site Plan <span class="arrow">→</span></a>
-                </div>
-                <div class="scroll-indicator">
-                    <div class="scroll-mouse">
-                        <div class="scroll-wheel"></div>
-                    </div>
-                    <span>Scroll to control 3D model & view details</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 2: ABOUT -->
-        <section id="about" class="section">
-            <div class="section-content">
-                <div class="section-header">
-                    <span class="section-label glass-card-micro">The Vision</span>
-                    <h2 class="section-title">Where Coastal Nature<br><span class="accent">Meets Architectural Elegance</span></h2>
-                </div>
-                <div class="about-grid">
-                    <div class="about-text">
-                        <p class="about-lead">Designed by Ashushri Creations for Biswajeet Ghosh at Balasore, Odisha, Anandamayee Eco Resort (AER) represents the pinnacle of sustainable luxury living.</p>
-                        <p>Combining raw organic materials—weathered teak, clay roof tiles, and living botanical walls—with modern high-end architectural flourishes like cantilevered floating staircases, frameless floor-to-ceiling glass, and warm indirect LED cove illumination.</p>
-                        <div class="about-stats">
-                            <div class="stat glass-card">
-                                <span class="stat-number">10</span>
-                                <span class="stat-label">Luxury Cottages</span>
-                            </div>
-                            <div class="stat glass-card">
-                                <span class="stat-number">1,800</span>
-                                <span class="stat-label">Sq Ft Pool</span>
-                            </div>
-                            <div class="stat glass-card">
-                                <span class="stat-number">13,000</span>
-                                <span class="stat-label">Sq Ft Lawn</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="about-image glass-card-img">
-                        <img src="assets/plan/master-plan.png" alt="AER Master Plan Balasore">
-                        <div class="img-overlay"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 3: ARCHITECTURAL MASTER BLUEPRINT -->
-        <section id="blueprint" class="section">
-            <div class="section-content">
-                <div class="section-header">
-                    <span class="section-label glass-card-micro">Official Master Plan</span>
-                    <h2 class="section-title">Biswajeet Ghosh, Balasore<br><span class="accent">Site Layout & Blueprint</span></h2>
-                    <p class="section-desc">Designed by Ashushri Creations — Full 15-zone comprehensive site planning</p>
-                </div>
-
-                <div class="blueprint-container glass-card">
-                    <div class="blueprint-image-wrapper">
-                        <img src="assets/plan/master-plan.png" alt="Master Layout Plan" class="blueprint-main-img">
-                    </div>
-                    
-                    <div class="blueprint-legends-grid">
-                        <div class="legend-item"><span class="legend-num">1</span> 10 No's Cottages (225 sqft each)</div>
-                        <div class="legend-item"><span class="legend-num">2</span> 1 no's Kitchen (525 sqft)</div>
-                        <div class="legend-item"><span class="legend-num">3</span> 1 no's Banquet Hall (2,000 sqft)</div>
-                        <div class="legend-item"><span class="legend-num">4</span> 1 no's Lawn Area (13,000 sqft)</div>
-                        <div class="legend-item"><span class="legend-num">5</span> 2 no's Parking Area (11,000 sqft)</div>
-                        <div class="legend-item"><span class="legend-num">6</span> 1 no's Kids Play Area</div>
-                        <div class="legend-item"><span class="legend-num">7</span> 1 no's Camp Fire & Open Lounge</div>
-                        <div class="legend-item"><span class="legend-num">8</span> 1 no's Swimming Pool (1,800 sqft)</div>
-                        <div class="legend-item"><span class="legend-num">9</span> 1 no's Badminton Court Area</div>
-                        <div class="legend-item"><span class="legend-num">10</span> Grand Main Gate & Entrance</div>
-                        <div class="legend-item"><span class="legend-num">11</span> A-frame Glamping Cabins</div>
-                        <div class="legend-item"><span class="legend-num">12</span> Forest Tree House & Deck</div>
-                        <div class="legend-item"><span class="legend-num">13</span> Open Air Amphitheatre Stage</div>
-                        <div class="legend-item"><span class="legend-num">14</span> Eco Mud House Cabins (4 Units)</div>
-                        <div class="legend-item"><span class="legend-num">15</span> Central Boulevard Water Fountain</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 4: 3D VILLA & RESORT EXPLORER (Scroll-Driven Animation) -->
-        <section id="cottages" class="section section-3d-explore">
-            <div class="section-content">
-                <div class="section-header">
-                    <span class="section-label glass-card-micro">Interactive 3D Engine</span>
-                    <h2 class="section-title">Scroll-Driven 3D<br><span class="accent">Villa & Overview</span></h2>
-                    <p class="section-desc">Scroll down to rotate the 3D model, trigger exploded-view cutaways, and inspect each face</p>
-                </div>
-
-                <!-- 3D Interactive Control Dock -->
-                <div class="model-control-dock glass-card">
-                    <div class="dock-title">VIEWPORT MODES</div>
-                    <div class="dock-buttons">
-                        <button class="dock-btn active" data-mode="villa">🏡 Luxury Cottage Overview</button>
-                        <button class="dock-btn" data-mode="resort">🗺️ Master Site Plan</button>
-                        <button class="dock-btn" data-mode="exploded">💥 Exploded Cutaway</button>
-                    </div>
-                    <div class="dock-divider"></div>
-                    <div class="dock-title">INTERIOR HOTSPOTS</div>
-                    <div class="dock-hotspots">
-                        <button class="hotspot-btn" data-hotspot="masterSuite">🛏️ Master Suite</button>
-                        <button class="hotspot-btn" data-hotspot="bathroom">🛁 Spa Bathroom</button>
-                        <button class="hotspot-btn" data-hotspot="sunkenLounge">🛋️ Sunken Lounge</button>
-                        <button class="hotspot-btn" data-hotspot="floatingStairs">🪵 Floating Stairs</button>
-                        <button class="hotspot-btn" data-hotspot="infinityPool">🌊 Infinity Pool</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SCROLL-DRIVEN INFO PANELS -->
-            <!-- 1. Front Entrance & Private Deck -->
-            <div class="villa-info-panel" id="info-front">
-                <div class="info-card glass-card">
-                    <div class="info-badge">EXTERIOR FACADE</div>
-                    <div class="info-icon">🏡</div>
-                    <h3>Private Teak Deck & Entrance</h3>
-                    <p>Cantilevered timber eaves with dark zinc standing seams. Floor-to-ceiling panoramic glass sliders open onto a private teak sun deck with integrated infinity plunge pool and modern sun loungers.</p>
-                    <div class="info-specs">
-                        <span class="spec">🪵 Weathered Teak</span>
-                        <span class="spec">🏊 Private Plunge Pool</span>
-                        <span class="spec">🪟 Frameless Glass</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. East Side Garden & Water Horizon -->
-            <div class="villa-info-panel" id="info-right">
-                <div class="info-card glass-card">
-                    <div class="info-badge">LANDSCAPE CONNECTION</div>
-                    <div class="info-icon">🌊</div>
-                    <h3>Infinity Water Edge</h3>
-                    <p>Oriented toward the sunrise and the sea breeze. The pool basin merges seamlessly with the surrounding coastal sand and lush native palms, illuminated by underwater aquamarine lights.</p>
-                    <div class="info-specs">
-                        <span class="spec">🌅 Sunrise Orientation</span>
-                        <span class="spec">💡 Aquatic LED</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. Exploded Cutaway Overview -->
-            <div class="villa-info-panel" id="info-exploded">
-                <div class="info-card glass-card">
-                    <div class="info-badge">STRUCTURAL CUTAWAY</div>
-                    <div class="info-icon">💥</div>
-                    <h3>Exploded Architectural Cutaway</h3>
-                    <p>The roof lifts to reveal the dual-level open-concept plan: Upper mezzanine master suite, double-height lightwell, cantilevered floating stairs, and ground-floor sunken living room with internal ficus courtyard.</p>
-                    <div class="info-specs">
-                        <span class="spec">↕️ Dual-Level Layout</span>
-                        <span class="spec">☀️ Central Skylight</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. Master Bedroom Suite -->
-            <div class="villa-info-panel" id="info-suite">
-                <div class="info-card glass-card">
-                    <div class="info-badge">FIRST FLOOR SUITE</div>
-                    <div class="info-icon">🛏️</div>
-                    <h3>Master Bedroom Suite</h3>
-                    <p>Featuring a dark fluted oak acoustic wall with recessed warm golden LED cove backlighting. Low-profile Japanese platform king bed with unobstructed ocean vistas and private glass balcony.</p>
-                    <div class="info-specs">
-                        <span class="spec">🪵 Fluted Oak Slats</span>
-                        <span class="spec">✨ Warm LED Cove</span>
-                        <span class="spec">🛡️ Glass Balustrade</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. Luxury Spa Washroom -->
-            <div class="villa-info-panel" id="info-washroom">
-                <div class="info-card glass-card">
-                    <div class="info-badge">WELLNESS SUITE</div>
-                    <div class="info-icon">🛁</div>
-                    <h3>Italian Calacatta Spa Bath</h3>
-                    <p>Floor-to-ceiling Calacatta Gold veined marble walls paired with a freestanding matte-black stone soaking tub. Backlit arched floating mirror, brass brushed hardware, and living preserved moss accent wall.</p>
-                    <div class="info-specs">
-                        <span class="spec">🏛️ Calacatta Gold</span>
-                        <span class="spec">🌿 Living Moss Wall</span>
-                        <span class="spec">🪞 Backlit Oval Mirror</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 6. Sunken Living Room & Floating Stairs -->
-            <div class="villa-info-panel" id="info-lounge">
-                <div class="info-card glass-card">
-                    <div class="info-badge">GROUND FLOOR LIVING</div>
-                    <div class="info-icon">🛋️</div>
-                    <h3>Sunken Lounge & Floating Stairs</h3>
-                    <p>A step-down sunken conversation pit with champagne velvet seating and Tom Ford marble coffee table. Frameless cantilevered oak stairs float against the fluted wood wall with step-by-step under-tread LED lights.</p>
-                    <div class="info-specs">
-                        <span class="spec">🌳 Courtyard Tree</span>
-                        <span class="spec">🪵 Floating Eurostairs</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scroll Spacer to drive full 3D timeline -->
-            <div class="scroll-spacer"></div>
-        </section>
-
-        <!-- SECTION 5: DESIGN INSPIRATION & MOODBOARD (From Telegram References) -->
-        <section id="moodboard" class="section">
-            <div class="section-content">
-                <div class="section-header">
-                    <span class="section-label glass-card-micro">Architectural DNA</span>
-                    <h2 class="section-title">Curated Reference Gallery<br><span class="accent">& Interior Moodboard</span></h2>
-                    <p class="section-desc">The exact design references synthesized into the AER 3D villa model</p>
-                </div>
-
-                <div class="moodboard-grid">
-                    <div class="moodboard-card glass-card">
-                        <div class="moodboard-img-box">
-                            <img src="assets/references/photo_2026-10-23_13-05-43.jpg" alt="Master Suite with fluted wood">
-                        </div>
-                        <div class="moodboard-caption">
-                            <h4>Master Suite Bedroom</h4>
-                            <p>Vertical acoustic oak slats with hidden warm LED cove lighting & panoramic corner glazing.</p>
-                        </div>
-                    </div>
-
-                    <div class="moodboard-card glass-card">
-                        <div class="moodboard-img-box">
-                            <img src="assets/references/photo_2026-10-23_13-05-59.jpg" alt="Eurostairs cantilevered staircase">
-                        </div>
-                        <div class="moodboard-caption">
-                            <h4>Cantilevered Floating Stairs</h4>
-                            <p>Solid oak treads floating with under-step illumination and seamless glass balustrade.</p>
-                        </div>
-                    </div>
-
-                    <div class="moodboard-card glass-card">
-                        <div class="moodboard-img-box">
-                            <img src="assets/references/photo_2026-10-23_13-05-42.jpg" alt="Freestanding bathtub and sea view">
-                        </div>
-                        <div class="moodboard-caption">
-                            <h4>Panoramic Spa Bathroom</h4>
-                            <p>Freestanding soaking tub overlooking the water, flanked by fluted timber consoles.</p>
-                        </div>
-                    </div>
-
-                    <div class="moodboard-card glass-card">
-                        <div class="moodboard-img-box">
-                            <img src="assets/references/photo_2026-10-23_13-05-50.jpg" alt="Sunken living room with courtyard tree">
-                        </div>
-                        <div class="moodboard-caption">
-                            <h4>Sunken Living Room</h4>
-                            <p>Double-height volume with integrated indoor courtyard tree and glass mezzanine.</p>
-                        </div>
-                    </div>
-
-                    <div class="moodboard-card glass-card">
-                        <div class="moodboard-img-box">
-                            <img src="assets/references/photo_2026-10-23_13-05-37.jpg" alt="Living moss wall washroom">
-                        </div>
-                        <div class="moodboard-caption">
-                            <h4>Living Moss Vanity Wall</h4>
-                            <p>Vertical organic preserved moss with perimeter ambient lighting & vessel stone basin.</p>
-                        </div>
-                    </div>
-
-                    <div class="moodboard-card glass-card">
-                        <div class="moodboard-img-box">
-                            <img src="assets/references/photo_2026-10-23_13-05-38.jpg" alt="Infinity pool and lake view">
-                        </div>
-                        <div class="moodboard-caption">
-                            <h4>Infinity Plunge Pool</h4>
-                            <p>Black slate infinity overflow pool terrace with minimalist twin sun loungers.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Reference Video Tour Player -->
-                <div class="reference-video-box glass-card">
-                    <div class="ref-video-header">
-                        <h3>🎥 Multi-Level Architecture Walkthrough Video</h3>
-                        <p>Interior layout, glass mezzanine, and lighting references</p>
-                    </div>
-                    <video controls poster="assets/references/photo_2026-10-23_13-05-50.jpg" class="ref-video-player">
-                        <source src="assets/references/video_2026-10-23_13-05-51.mp4" type="video/mp4">
-                        Your browser does not support HTML5 video.
-                    </video>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 6: ACTUAL SITE GALLERY -->
-        <section id="gallery" class="section">
-            <div class="section-content">
-                <div class="section-header">
-                    <span class="section-label glass-card-micro">Ground Reality</span>
-                    <h2 class="section-title">Balasore Site Progress<br><span class="accent">& Construction Gallery</span></h2>
-                </div>
-                <div class="gallery-grid">
-                    <div class="gallery-item glass-card-img large">
-                        <img src="assets/images/cottages-row.jpeg" alt="Row of cottages under construction">
-                        <div class="gallery-overlay">
-                            <span>10 No's Cottage Row Under Construction</span>
-                        </div>
-                    </div>
-                    <div class="gallery-item glass-card-img">
-                        <img src="assets/images/site-entrance.jpeg" alt="Resort entrance path">
-                        <div class="gallery-overlay">
-                            <span>Main Entrance Boulevard Approach</span>
-                        </div>
-                    </div>
-                    <div class="gallery-item glass-card-img">
-                        <img src="assets/images/site-overview.jpeg" alt="Overview of the 2.5 acre site">
-                        <div class="gallery-overlay">
-                            <span>2.5 Acre Beachside Overview</span>
-                        </div>
-                    </div>
-                    <div class="gallery-item glass-card-img">
-                        <img src="assets/images/site-construction.jpeg" alt="Foundation and ground preparation">
-                        <div class="gallery-overlay">
-                            <span>Foundation & Brick Masonry</span>
-                        </div>
-                    </div>
-                    <div class="gallery-item glass-card-img large">
-                        <img src="assets/images/cottages-panorama.jpeg" alt="Panoramic view of resort site">
-                        <div class="gallery-overlay">
-                            <span>Full Site Panoramic View</span>
-                        </div>
-                    </div>
-                    <div class="gallery-item glass-card-img">
-                        <img src="assets/images/cctv-aerial.jpeg" alt="CCTV live site view">
-                        <div class="gallery-overlay">
-                            <span>Live 24/7 Security CCTV Monitoring</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 7: RESORT AMENITIES -->
-        <section id="amenities" class="section">
-            <div class="section-content">
-                <div class="section-header">
-                    <span class="section-label glass-card-micro">World-Class Comfort</span>
-                    <h2 class="section-title">Resort Amenities<br><span class="accent">Curated For Serenity</span></h2>
-                </div>
-                <div class="amenities-grid">
-                    <div class="amenity-card glass-card">
-                        <div class="amenity-icon">🏊</div>
-                        <h3>1,800 Sq Ft Swimming Pool</h3>
-                        <p>Spacious curved swimming pool with sun deck, poolside cabanas, and kids shallow wading zone.</p>
-                    </div>
-                    <div class="amenity-card glass-card">
-                        <div class="amenity-icon">🏛️</div>
-                        <h3>2,000 Sq Ft Banquet Hall</h3>
-                        <p>Fully equipped grand banquet hall for luxury destination weddings, corporate retreats, and galas.</p>
-                    </div>
-                    <div class="amenity-card glass-card">
-                        <div class="amenity-icon">🔥</div>
-                        <h3>Camp Fire & Open Lounge</h3>
-                        <p>Sunken amphitheatre fire pit with circular stone benching for acoustic evenings under the stars.</p>
-                    </div>
-                    <div class="amenity-card glass-card">
-                        <div class="amenity-icon">🌳</div>
-                        <h3>Forest Treehouse Deck</h3>
-                        <p>Elevated canopy treehouse retreat connected by rope bridges for panoramic ocean and forest views.</p>
-                    </div>
-                    <div class="amenity-card glass-card">
-                        <div class="amenity-icon">🏸</div>
-                        <h3>Badminton & Play Area</h3>
-                        <p>Full outdoor sports court and landscaped adventure playground for children and families.</p>
-                    </div>
-                    <div class="amenity-card glass-card">
-                        <div class="amenity-icon">🅿️</div>
-                        <h3>11,000 Sq Ft Parking</h3>
-                        <p>Secure dual parking bays with EV charging stations and 24/7 gated security surveillance.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- SECTION 8: CONTACT & ENQUIRY -->
-        <section id="contact" class="section">
-            <div class="section-content">
-                <div class="section-header">
-                    <span class="section-label glass-card-micro">Reservations</span>
-                    <h2 class="section-title">Experience AER<br><span class="accent">Begin Your Stay</span></h2>
-                </div>
-                <div class="contact-grid">
-                    <div class="contact-info glass-card">
-                        <h3>AER Balasore</h3>
-                        <p>Anandamayee Eco Resort<br>At Sea Beach, Balasore, Odisha<br>Project Promoter: Biswajeet Ghosh</p>
-                        <div class="contact-details">
-                            <a href="mailto:info@aeresort.com" class="contact-link">📧 contact@anandamayee-resort.com</a>
-                            <a href="tel:+91" class="contact-link">📞 +91 (0) 98000 00000</a>
-                        </div>
-                        <div class="social-links">
-                            <span class="social-link glass-card-micro">Instagram</span>
-                            <span class="social-link glass-card-micro">WhatsApp</span>
-                            <span class="social-link glass-card-micro">Ashushri Creations</span>
-                        </div>
-                    </div>
-                    <div class="contact-form glass-card">
-                        <h3>Villa Enquiry</h3>
-                        <form>
-                            <div class="form-group">
-                                <input type="text" placeholder="Your Name" class="glass-input" required>
-                            </div>
-                            <div class="form-group">
-                                <input type="email" placeholder="Your Email" class="glass-input" required>
-                            </div>
-                            <div class="form-group">
-                                <input type="tel" placeholder="Phone Number" class="glass-input" required>
-                            </div>
-                            <div class="form-group">
-                                <textarea placeholder="Tell us your dates, group size, or custom cottage requirements..." rows="4" class="glass-input"></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary glass-btn">Send Enquiry</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <footer class="footer">
-                <div class="footer-content">
-                    <div class="footer-brand">
-                        <img src="assets/images/logo.jpeg" alt="AER" class="footer-logo">
-                        <p>Nature. Serenity. Sustainability.</p>
-                    </div>
-                    <div class="footer-copy">
-                        <p>© 2026 Anandamayee Eco Resort, Balasore, Odisha.</p>
-                        <p>Master Plan by Ashushri Creations • All Rights Reserved</p>
-                    </div>
-                </div>
-            </footer>
-        </section>
-
-    </main>
+    <!-- VIRTUAL SCROLL DRIVER TRACK (Enables natural mouse wheel / touch scroll) -->
+    <div id="scroll-track"></div>
 
     <!-- SCRIPTS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="js/three.min.js"></script>
+    <script src="js/OrbitControls.js"></script>
+    <script src="js/GLTFExporter.js"></script>
+    <script src="js/gsap.min.js"></script>
+    <script src="js/ScrollTrigger.min.js"></script>
     <script src="js/villa-model.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/main.js"></script>

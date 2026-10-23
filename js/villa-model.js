@@ -1,15 +1,26 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
    AER — Anandamayee Eco Resort (Balasore, Odisha)
-   Advanced 3D Biomimetic Villa & Resort Architectural Engine
-   
+   Dedicated 3D Architectural Model Engine & Interactive Explorer
+
    Features:
-   - Full Master Resort Layout (Balasore Site Plan: 10 Cottages, 1800 sqft Pool,
-     Banquet Hall, Treehouse, Mud Huts, Fountain, Campfire, Lawn, etc.)
-   - High-Fidelity Luxury Cottage 3D Model with Exploded Cutaway View
-   - Rich Procedural & Image Textures (Fluted Oak, Calacatta Gold Marble, Teak Deck,
-     Living Moss Wall, Herringbone Floor, Translucent Water)
-   - Real Telegram Reference Image Texture integration
-   - Interactive Hotspot Navigation & Orbit Controls
+   - High-Fidelity 3D Luxury Villa Cottage (Dual-level mezzanine, 225 sqft footprint)
+   - Procedural PBR Textures matching Telegram references:
+     * Fluted Dark Oak acoustic wall slats
+     * Calacatta Gold veined Italian marble
+     * Weathered Teak solarium decking
+     * Preserved Living Moss wellness wall
+     * Architectural standing-seam zinc roof
+     * Cyan translucent ripple pool water
+   - Eurostairs cantilevered floating oak stairs with under-tread LED strips
+   - Japanese indoor courtyard garden with central bonsai tree
+   - Freestanding matte black soaking tub with brushed brass tapware
+   - Exploded Architectural Cutaway (roof and upper mezzanine lifting)
+   - Full 2.5 Acre Master Plan (Ashushri Creations, Balasore: 10 Cottages, 1800 sqft pool,
+     banquet hall, treehouse, mud huts, campfire pit, entrance gate, fountain)
+   - Three.js OrbitControls for free 3D inspection (drag to rotate, wheel to zoom)
+   - Wireframe CAD mode toggle
+   - Studio, Golden Hour & Luxury Night lighting modes with warm LED cove illumination
+   - Native GLTF / GLB 3D Model Exporter for Blender, 3ds Max, & CAD software
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 class VillaModel {
@@ -17,52 +28,59 @@ class VillaModel {
         this.scene = null;
         this.camera = null;
         this.renderer = null;
-        
-        // Root groups
+        this.controls = null;
+
+        // Scene Groups
         this.mainGroup = null;
-        this.resortGroup = null;        // Full Master Plan
-        this.villaOverviewGroup = null; // High-detail Cottage
-        
-        // Exploded view components of the Cottage
+        this.resortGroup = null;        // Master Site Plan
+        this.villaOverviewGroup = null; // Detailed Cottage Model
+
+        // Exploded Cutaway Components
         this.explodedLayers = {
             roof: null,
             upperFloor: null,
             groundFloor: null,
             poolDeck: null,
-            stairs: null,
-            interiorWalls: null
+            stairs: null
         };
-        
-        // State
-        this.activeMode = 'villa'; // 'villa' | 'resort' | 'exploded'
-        this.explosionFactor = 0.0; // 0 (assembled) -> 1 (fully exploded)
-        this.targetExplosion = 0.0;
-        
+
+        // State Flags
+        this.activeMode = 'villa'; // 'villa' | 'resort'
+        this.isFreeOrbit = false;
+        this.isWireframe = false;
+        this.lightingMode = 'golden'; // 'golden' | 'night' | 'studio'
+        this.autoRotate = false;
+        this.autoRotateSpeed = 0.5;
+
+        // Camera Animation Targets (for smooth lerping during scroll)
         this.targetCameraPos = new THREE.Vector3(0, 4.5, 12);
         this.targetLookAt = new THREE.Vector3(0, 1.8, 0);
         this.currentLookAt = new THREE.Vector3(0, 1.8, 0);
-        
-        this.mouseX = 0;
-        this.mouseY = 0;
-        this.clock = new THREE.Clock();
+
+        // Explosion Cutaway Factor: 0.0 (assembled) -> 1.0 (fully exploded)
+        this.explosionFactor = 0.0;
+        this.targetExplosion = 0.0;
+
+        // Lights & Effects
+        this.lightObjects = {};
         this.ambientParticles = [];
-        this.fountainParticles = null;
-        this.fireParticles = null;
-        this.waterMesh = null;
         this.poolWaterMesh = null;
-        
-        // Texture cache
+        this.oceanWaterMesh = null;
+        this.planPlaneMesh = null;
+        this.clock = new THREE.Clock();
+
+        // Texture Cache
         this.textures = {};
-        
+
         this.init();
     }
 
     init() {
-        // Scene setup
+        // 1. Scene & Atmosphere
         this.scene = new THREE.Scene();
-        this.scene.fog = new THREE.FogExp2(0x13221B, 0.012);
+        this.scene.fog = new THREE.FogExp2(0x181410, 0.012);
 
-        // Camera setup
+        // 2. Camera Setup
         this.camera = new THREE.PerspectiveCamera(
             45,
             window.innerWidth / window.innerHeight,
@@ -71,7 +89,7 @@ class VillaModel {
         );
         this.camera.position.set(0, 5, 14);
 
-        // Canvas & Renderer
+        // 3. Canvas & WebGL Renderer
         const canvas = document.getElementById('villa-canvas');
         this.renderer = new THREE.WebGLRenderer({
             canvas,
@@ -87,60 +105,70 @@ class VillaModel {
         this.renderer.toneMappingExposure = 1.25;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
 
-        // Generate procedural textures matching Telegram references
+        // 4. OrbitControls (Free 3D Inspection)
+        if (typeof THREE.OrbitControls !== 'undefined') {
+            this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+            this.controls.enableDamping = true;
+            this.controls.dampingFactor = 0.06;
+            this.controls.maxPolarAngle = Math.PI / 2 - 0.02; // Keep above ground level
+            this.controls.minDistance = 2.5;
+            this.controls.maxDistance = 60;
+            this.controls.target.set(0, 1.8, 0);
+            this.controls.enabled = false; // Scroll tour mode by default
+        }
+
+        // 5. Generate Procedural PBR Textures
         this.generateProceduralTextures();
 
-        // Lights
+        // 6. Setup Lighting Architecture
         this.setupLights();
 
-        // Main scene tree
+        // 7. Scene Hierarchy
         this.mainGroup = new THREE.Group();
         this.scene.add(this.mainGroup);
 
-        // Build both models
+        // 8. Build 3D Models
         this.buildLuxuryCottage();
         this.buildMasterResort();
         this.buildLandscape();
         this.createAtmosphere();
 
-        // Start in villa mode (prominent detailed cottage)
+        // Set default mode
         this.setMode('villa');
+        this.setLightingMode('golden');
 
-        // Events
+        // Window resize handler
         window.addEventListener('resize', () => this.onResize());
-        window.addEventListener('mousemove', (e) => {
-            this.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-            this.mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-        });
 
-        // Start render loop
+        // Start 60fps render loop
         this.animate();
     }
 
-    /* ── Procedural PBR Textures (Inspired by Telegram references) ── */
+    /* ═══════════════════════════════════════════════════════════════════════════
+       PROCEDURAL PBR TEXTURES (Synthesized from Telegram References)
+       ═══════════════════════════════════════════════════════════════════════════ */
     generateProceduralTextures() {
-        // 1. Fluted Dark Wood Slats (As seen in the Master Suite & Washroom refs)
+        // 1. Fluted Dark Oak Acoustic Wood (Photos 13-05-43, 13-05-42, 13-05-59)
         const flutedCanvas = document.createElement('canvas');
         flutedCanvas.width = 512;
         flutedCanvas.height = 512;
         const fctx = flutedCanvas.getContext('2d');
         fctx.fillStyle = '#1e140d';
         fctx.fillRect(0, 0, 512, 512);
-        
+
         const slatWidth = 16;
         for (let x = 0; x < 512; x += slatWidth) {
-            // Wood slat highlight
             const grad = fctx.createLinearGradient(x, 0, x + slatWidth, 0);
-            grad.addColorStop(0, '#150e09');
-            grad.addColorStop(0.15, '#2e1f14');
-            grad.addColorStop(0.5, '#4a3321');
-            grad.addColorStop(0.85, '#2e1f14');
-            grad.addColorStop(1, '#0e0906');
+            grad.addColorStop(0, '#120b07');
+            grad.addColorStop(0.18, '#2a1b11');
+            grad.addColorStop(0.5, '#48311f');
+            grad.addColorStop(0.82, '#2a1b11');
+            grad.addColorStop(1, '#0e0805');
             fctx.fillStyle = grad;
             fctx.fillRect(x, 0, slatWidth - 2, 512);
-            
+
             // Recessed groove shadow
-            fctx.fillStyle = '#0a0604';
+            fctx.fillStyle = '#080503';
             fctx.fillRect(x + slatWidth - 2, 0, 2, 512);
         }
         this.textures.flutedWood = new THREE.CanvasTexture(flutedCanvas);
@@ -148,46 +176,46 @@ class VillaModel {
         this.textures.flutedWood.wrapT = THREE.RepeatWrapping;
         this.textures.flutedWood.repeat.set(4, 2);
 
-        // 2. Calacatta Gold Marble (As in Executive Office & Luxury Bath refs)
+        // 2. Calacatta Gold Marble (Photos 13-05-37, 13-05-42)
         const marbleCanvas = document.createElement('canvas');
         marbleCanvas.width = 1024;
         marbleCanvas.height = 1024;
         const mctx = marbleCanvas.getContext('2d');
         mctx.fillStyle = '#FAF7F2'; // Pearl base
         mctx.fillRect(0, 0, 1024, 1024);
-        
-        // Soft cloudy undertones
-        mctx.fillStyle = 'rgba(230, 222, 210, 0.4)';
-        for (let i = 0; i < 20; i++) {
+
+        // Soft clouding
+        mctx.fillStyle = 'rgba(235, 227, 216, 0.45)';
+        for (let i = 0; i < 24; i++) {
             mctx.beginPath();
-            mctx.arc(Math.random() * 1024, Math.random() * 1024, 150 + Math.random() * 200, 0, Math.PI * 2);
+            mctx.arc(Math.random() * 1024, Math.random() * 1024, 140 + Math.random() * 200, 0, Math.PI * 2);
             mctx.fill();
         }
-        
-        // Golden & Grey veins
+
+        // Golden Champagne & Slate veins
         const drawVein = (color, width, startX, startY) => {
             mctx.strokeStyle = color;
             mctx.lineWidth = width;
             mctx.beginPath();
             mctx.moveTo(startX, startY);
             let cx = startX, cy = startY;
-            for (let step = 0; step < 12; step++) {
-                cx += (Math.random() - 0.3) * 120;
-                cy += 80 + Math.random() * 40;
+            for (let step = 0; step < 14; step++) {
+                cx += (Math.random() - 0.35) * 110;
+                cy += 70 + Math.random() * 45;
                 mctx.lineTo(cx, cy);
             }
             mctx.stroke();
         };
 
-        for (let i = 0; i < 6; i++) {
-            drawVein('rgba(196, 154, 86, 0.45)', 2.5 + Math.random() * 3, Math.random() * 800, 0); // Champagne gold
-            drawVein('rgba(120, 115, 110, 0.3)', 1.5, Math.random() * 800, 0); // Subtle slate grey
+        for (let i = 0; i < 7; i++) {
+            drawVein('rgba(201, 160, 92, 0.52)', 2.5 + Math.random() * 3, Math.random() * 850, 0); // Champagne Gold
+            drawVein('rgba(130, 125, 120, 0.28)', 1.5, Math.random() * 850, 0); // Slate
         }
         this.textures.calacattaMarble = new THREE.CanvasTexture(marbleCanvas);
         this.textures.calacattaMarble.wrapS = THREE.RepeatWrapping;
         this.textures.calacattaMarble.wrapT = THREE.RepeatWrapping;
 
-        // 3. Teak Wood Decking (Poolside & Veranda)
+        // 3. Teak Wood Decking (Photos 13-05-38, 13-05-40)
         const deckCanvas = document.createElement('canvas');
         deckCanvas.width = 512;
         deckCanvas.height = 512;
@@ -198,7 +226,7 @@ class VillaModel {
         for (let y = 0; y < 512; y += plankH) {
             dctx.fillStyle = (y % 48 === 0) ? '#7B562B' : '#6A4A24';
             dctx.fillRect(0, y, 512, plankH - 2);
-            dctx.fillStyle = '#3A2711'; // Seam line
+            dctx.fillStyle = '#34220F';
             dctx.fillRect(0, y + plankH - 2, 512, 2);
         }
         this.textures.teakDeck = new THREE.CanvasTexture(deckCanvas);
@@ -206,14 +234,14 @@ class VillaModel {
         this.textures.teakDeck.wrapT = THREE.RepeatWrapping;
         this.textures.teakDeck.repeat.set(3, 3);
 
-        // 4. Living Moss / Vertical Green Wall
+        // 4. Living Moss Wellness Wall (Photo 13-05-37)
         const mossCanvas = document.createElement('canvas');
         mossCanvas.width = 256;
         mossCanvas.height = 256;
         const mossCtx = mossCanvas.getContext('2d');
         mossCtx.fillStyle = '#223B24';
         mossCtx.fillRect(0, 0, 256, 256);
-        for (let i = 0; i < 400; i++) {
+        for (let i = 0; i < 480; i++) {
             mossCtx.fillStyle = Math.random() > 0.4 ? '#4E7D3A' : '#73A842';
             mossCtx.beginPath();
             mossCtx.arc(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 4, 0, Math.PI * 2);
@@ -224,17 +252,17 @@ class VillaModel {
         this.textures.moss.wrapT = THREE.RepeatWrapping;
         this.textures.moss.repeat.set(2, 4);
 
-        // 5. Standing Seam Zinc / Slate Dark Roof
+        // 5. Standing Seam Zinc / Dark Architectural Roof
         const roofCanvas = document.createElement('canvas');
         roofCanvas.width = 512;
         roofCanvas.height = 512;
         const rctx = roofCanvas.getContext('2d');
-        rctx.fillStyle = '#24282B';
+        rctx.fillStyle = '#222629';
         rctx.fillRect(0, 0, 512, 512);
         for (let x = 0; x < 512; x += 32) {
-            rctx.fillStyle = '#1A1D1F';
+            rctx.fillStyle = '#171A1C';
             rctx.fillRect(x, 0, 3, 512);
-            rctx.fillStyle = '#3A4045';
+            rctx.fillStyle = '#393F44';
             rctx.fillRect(x + 3, 0, 1, 512);
         }
         this.textures.zincRoof = new THREE.CanvasTexture(roofCanvas);
@@ -242,7 +270,7 @@ class VillaModel {
         this.textures.zincRoof.wrapT = THREE.RepeatWrapping;
         this.textures.zincRoof.repeat.set(4, 4);
 
-        // 6. Master Plan Ashushri Image Texture
+        // 6. Master Layout Plan Texture (Ashushri Creations)
         const loader = new THREE.TextureLoader();
         loader.load('assets/plan/master-plan.png', (tex) => {
             tex.encoding = THREE.sRGBEncoding;
@@ -254,104 +282,143 @@ class VillaModel {
         });
     }
 
-    /* ── Lighting Architecture ── */
+    /* ═══════════════════════════════════════════════════════════════════════════
+       LIGHTING ARCHITECTURE & ATMOSPHERES
+       ═══════════════════════════════════════════════════════════════════════════ */
     setupLights() {
-        // Natural Coastal Sun (Warm Pearl/Champagne key light)
-        const sun = new THREE.DirectionalLight(0xFFF4E5, 1.35);
-        sun.position.set(12, 22, 10);
-        sun.castShadow = true;
-        sun.shadow.mapSize.width = 2048;
-        sun.shadow.mapSize.height = 2048;
-        sun.shadow.camera.near = 0.5;
-        sun.shadow.camera.far = 100;
-        sun.shadow.camera.left = -25;
-        sun.shadow.camera.right = 25;
-        sun.shadow.camera.top = 25;
-        sun.shadow.camera.bottom = -25;
-        sun.shadow.bias = -0.0001;
-        this.scene.add(sun);
+        // Natural Sun Light
+        this.sunLight = new THREE.DirectionalLight(0xFFE8D0, 1.4);
+        this.sunLight.position.set(12, 22, 10);
+        this.sunLight.castShadow = true;
+        this.sunLight.shadow.mapSize.width = 2048;
+        this.sunLight.shadow.mapSize.height = 2048;
+        this.sunLight.shadow.camera.near = 0.5;
+        this.sunLight.shadow.camera.far = 100;
+        this.sunLight.shadow.camera.left = -20;
+        this.sunLight.shadow.camera.right = 20;
+        this.sunLight.shadow.camera.top = 20;
+        this.sunLight.shadow.camera.bottom = -20;
+        this.sunLight.shadow.bias = -0.0001;
+        this.scene.add(this.sunLight);
 
-        // Sky / Ocean Ambient Fill
-        const hemi = new THREE.HemisphereLight(0xEAE3D2, 0x1A2F26, 0.55);
-        this.scene.add(hemi);
+        // Ambient Fill
+        this.hemiLight = new THREE.HemisphereLight(0xF4ECE1, 0x1A2820, 0.6);
+        this.scene.add(this.hemiLight);
 
-        // Warm Champagne Accent Glow (recessed cove lighting aesthetic)
-        const warmAccent = new THREE.PointLight(0xD4A96A, 1.2, 18);
-        warmAccent.position.set(0, 3.2, 0);
-        this.scene.add(warmAccent);
+        // Warm Champagne Cove LED Accent (2700K recessed glow)
+        this.warmAccentLight = new THREE.PointLight(0xD4A96A, 1.3, 20, 1.5);
+        this.warmAccentLight.position.set(0, 3.2, 0);
+        this.scene.add(this.warmAccentLight);
 
-        // Poolside turquoise water bounce light
-        const poolBounce = new THREE.PointLight(0x3CD2CE, 0.8, 14);
-        poolBounce.position.set(4.5, 0.8, 2.5);
-        this.scene.add(poolBounce);
+        // Poolside Turquoise Bounce Light
+        this.poolBounceLight = new THREE.PointLight(0x2BD9D0, 0.9, 14, 1.8);
+        this.poolBounceLight.position.set(3.5, 0.8, 2.8);
+        this.scene.add(this.poolBounceLight);
 
-        // Soft moon/ocean rim light
-        const rim = new THREE.DirectionalLight(0x7FB5B5, 0.4);
-        rim.position.set(-15, 8, -15);
-        this.scene.add(rim);
+        // Moon / Ocean Rim Light
+        this.rimLight = new THREE.DirectionalLight(0x7FB5B5, 0.4);
+        this.rimLight.position.set(-15, 8, -15);
+        this.scene.add(this.rimLight);
+
+        this.lightObjects = {
+            sun: this.sunLight,
+            hemi: this.hemiLight,
+            warmAccent: this.warmAccentLight,
+            poolBounce: this.poolBounceLight,
+            rim: this.rimLight
+        };
     }
 
-    /* ── PBR Material Library ── */
+    setLightingMode(mode) {
+        this.lightingMode = mode;
+        if (mode === 'golden') {
+            this.sunLight.color.setHex(0xFFE0B2);
+            this.sunLight.intensity = 1.45;
+            this.sunLight.position.set(14, 18, 12);
+            this.hemiLight.color.setHex(0xFDF4E3);
+            this.hemiLight.groundColor.setHex(0x281F17);
+            this.hemiLight.intensity = 0.65;
+            this.warmAccentLight.color.setHex(0xD4A96A);
+            this.warmAccentLight.intensity = 1.4;
+            this.poolBounceLight.color.setHex(0x3CD2CE);
+            this.poolBounceLight.intensity = 0.85;
+            this.renderer.toneMappingExposure = 1.25;
+            this.scene.fog.color.setHex(0x181410);
+        } else if (mode === 'night') {
+            this.sunLight.color.setHex(0x243447);
+            this.sunLight.intensity = 0.22;
+            this.sunLight.position.set(5, 15, -10);
+            this.hemiLight.color.setHex(0x0F1A24);
+            this.hemiLight.groundColor.setHex(0x060B10);
+            this.hemiLight.intensity = 0.35;
+            this.warmAccentLight.color.setHex(0xFFA726);
+            this.warmAccentLight.intensity = 2.8; // Bright warm cove illumination
+            this.poolBounceLight.color.setHex(0x00E5FF);
+            this.poolBounceLight.intensity = 2.2; // Glowing turquoise pool
+            this.renderer.toneMappingExposure = 1.1;
+            this.scene.fog.color.setHex(0x080C10);
+        } else if (mode === 'studio') {
+            this.sunLight.color.setHex(0xFFFFFF);
+            this.sunLight.intensity = 1.5;
+            this.sunLight.position.set(12, 26, 14);
+            this.hemiLight.color.setHex(0xEEF2F6);
+            this.hemiLight.groundColor.setHex(0x2D3748);
+            this.hemiLight.intensity = 0.75;
+            this.warmAccentLight.color.setHex(0xD4A96A);
+            this.warmAccentLight.intensity = 0.8;
+            this.poolBounceLight.color.setHex(0x26C6DA);
+            this.poolBounceLight.intensity = 0.5;
+            this.renderer.toneMappingExposure = 1.3;
+            this.scene.fog.color.setHex(0x1A2522);
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       PBR MATERIAL LIBRARY
+       ═══════════════════════════════════════════════════════════════════════════ */
     getMaterials() {
         return {
-            // Fluted Dark Wood (Wall panelling & bedroom accent)
             flutedWood: new THREE.MeshStandardMaterial({
                 map: this.textures.flutedWood,
                 roughness: 0.55,
                 metalness: 0.1,
             }),
-
-            // Calacatta Gold Marble (Bathroom & vanity)
             marble: new THREE.MeshStandardMaterial({
                 map: this.textures.calacattaMarble,
                 roughness: 0.15,
                 metalness: 0.1,
             }),
-
-            // Teak Decking (Verandas, decks, stairs)
             teak: new THREE.MeshStandardMaterial({
                 map: this.textures.teakDeck,
                 roughness: 0.65,
                 metalness: 0.05,
             }),
-
-            // Standing Seam Architectural Roof
             zincRoof: new THREE.MeshStandardMaterial({
                 map: this.textures.zincRoof,
                 roughness: 0.4,
                 metalness: 0.5,
                 color: 0x33393E
             }),
-
-            // Luxury Champagne Metal Trims & Mullions
             champagneMetal: new THREE.MeshStandardMaterial({
                 color: 0xD4A96A,
                 roughness: 0.3,
                 metalness: 0.85,
             }),
-
-            // Matte Charcoal Architecture (Frames & Cantilevers)
             charcoalMetal: new THREE.MeshStandardMaterial({
                 color: 0x1F2224,
                 roughness: 0.45,
                 metalness: 0.6,
             }),
-
-            // Living Green Moss Wall
             mossWall: new THREE.MeshStandardMaterial({
                 map: this.textures.moss,
                 roughness: 0.9,
                 metalness: 0.0,
             }),
-
-            // Structural Pearl Stone & Render
             pearlWall: new THREE.MeshStandardMaterial({
                 color: 0xF2ECE1,
                 roughness: 0.8,
                 metalness: 0.05,
             }),
-
-            // Frameless Ultra-Clear Glass
             glass: new THREE.MeshPhysicalMaterial({
                 color: 0xD8EDF8,
                 transparent: true,
@@ -363,13 +430,9 @@ class VillaModel {
                 clearcoat: 1.0,
                 clearcoatRoughness: 0.08,
             }),
-
-            // Warm LED Cove / Strip Light (Emissive)
             warmLed: new THREE.MeshBasicMaterial({
                 color: 0xFFE0A0,
             }),
-
-            // Cyan Swimming Pool Water
             poolWater: new THREE.MeshPhysicalMaterial({
                 color: 0x18A3B8,
                 transparent: true,
@@ -379,31 +442,33 @@ class VillaModel {
                 transmission: 0.75,
                 ior: 1.33,
             }),
-
-            // Freestanding Matte Black Bathtub (from ref)
             matteBlack: new THREE.MeshStandardMaterial({
                 color: 0x141414,
                 roughness: 0.35,
                 metalness: 0.2,
             }),
-
-            // Fabric / Velvet Bed & Sofa
             velvetChampagne: new THREE.MeshStandardMaterial({
                 color: 0xC5B498,
                 roughness: 0.9,
                 metalness: 0.05,
             }),
-
             darkFabric: new THREE.MeshStandardMaterial({
                 color: 0x242426,
                 roughness: 0.95,
                 metalness: 0.0,
+            }),
+            sheerCurtain: new THREE.MeshStandardMaterial({
+                color: 0xF7F4EF,
+                roughness: 0.85,
+                transparent: true,
+                opacity: 0.65,
+                side: THREE.DoubleSide
             })
         };
     }
 
     /* ═══════════════════════════════════════════════════════════════════════════
-       MODEL 1: ULTRA-LUXURY COTTAGE (Full Overview & Exploded Cutaway)
+       MODEL 1: HIGH-FIDELITY LUXURY COTTAGE (Full Overview & Exploded Cutaway)
        ═══════════════════════════════════════════════════════════════════════════ */
     buildLuxuryCottage() {
         const mat = this.getMaterials();
@@ -411,36 +476,50 @@ class VillaModel {
 
         // ── LAYER 0: Ground Platform & Teak Infinity Pool Deck ──
         const poolDeckGroup = new THREE.Group();
-        
-        // Concrete foundation slab
-        const slabGeo = new THREE.BoxGeometry(11, 0.4, 10);
-        const slab = new THREE.Mesh(slabGeo, mat.pearlWall);
+
+        // Concrete foundation
+        const slab = new THREE.Mesh(new THREE.BoxGeometry(11, 0.4, 10), mat.pearlWall);
         slab.position.y = 0.2;
         slab.receiveShadow = true;
         poolDeckGroup.add(slab);
 
         // Teak wood deck
-        const deckGeo = new THREE.BoxGeometry(10.8, 0.08, 9.8);
-        const deck = new THREE.Mesh(deckGeo, mat.teak);
+        const deck = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.08, 9.8), mat.teak);
         deck.position.y = 0.44;
         deck.receiveShadow = true;
         poolDeckGroup.add(deck);
 
+        // Deck Floating Underglow Strip
+        const deckGlow = new THREE.Mesh(new THREE.BoxGeometry(10.8, 0.03, 0.03), mat.warmLed);
+        deckGlow.position.set(0, 0.05, 4.9);
+        poolDeckGroup.add(deckGlow);
+
         // Private Infinity Pool
-        const poolTroughGeo = new THREE.BoxGeometry(4.2, 0.9, 3.2);
-        const poolInnerMat = new THREE.MeshStandardMaterial({ color: 0x0C4759, roughness: 0.2 });
-        const poolTrough = new THREE.Mesh(poolTroughGeo, poolInnerMat);
+        const poolTrough = new THREE.Mesh(
+            new THREE.BoxGeometry(4.2, 0.9, 3.2),
+            new THREE.MeshStandardMaterial({ color: 0x0C4759, roughness: 0.2 })
+        );
         poolTrough.position.set(3.0, 0.0, 2.8);
         poolDeckGroup.add(poolTrough);
 
         // Pool Water surface
-        const pWaterGeo = new THREE.PlaneGeometry(4.0, 3.0);
-        this.poolWaterMesh = new THREE.Mesh(pWaterGeo, mat.poolWater);
+        this.poolWaterMesh = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 3.0), mat.poolWater);
         this.poolWaterMesh.rotation.x = -Math.PI / 2;
         this.poolWaterMesh.position.set(3.0, 0.42, 2.8);
         poolDeckGroup.add(this.poolWaterMesh);
 
-        // Poolside Sun Loungers (twin modern black loungers as in Telegram ref)
+        // Underwater Pool Spotlights
+        [1.8, 3.0, 4.2].forEach(px => {
+            const spot = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.08, 0.08, 0.03, 12),
+                new THREE.MeshBasicMaterial({ color: 0x00E5FF })
+            );
+            spot.rotation.x = Math.PI / 2;
+            spot.position.set(px, 0.15, 1.3);
+            poolDeckGroup.add(spot);
+        });
+
+        // Twin Sun Loungers (Modern black loungers from Telegram ref)
         [-0.7, 0.7].forEach(offset => {
             const lounger = new THREE.Group();
             const bedPart = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.12, 2.0), mat.darkFabric);
@@ -452,14 +531,19 @@ class VillaModel {
             poolDeckGroup.add(lounger);
         });
 
+        // Cocktail Table between loungers
+        const sideTable = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.32, 16), mat.teak);
+        sideTable.position.set(3.0, 0.62, 0.4);
+        poolDeckGroup.add(sideTable);
+
         this.explodedLayers.poolDeck = poolDeckGroup;
         this.villaOverviewGroup.add(poolDeckGroup);
 
-        // ── LAYER 1: Ground Floor (Sunken Lounge, Courtyard Tree, Living) ──
+        // ── LAYER 1: Ground Floor (Sunken Lounge, Japanese Tree, Living) ──
         const groundGroup = new THREE.Group();
         groundGroup.position.y = 0.48;
 
-        // Exterior stone & pearl walls (L-shaped luxury layout)
+        // Exterior stone & pearl walls
         const backWall = new THREE.Mesh(new THREE.BoxGeometry(7.0, 2.8, 0.25), mat.pearlWall);
         backWall.position.set(-1.5, 1.4, -4.5);
         backWall.castShadow = true;
@@ -480,25 +564,30 @@ class VillaModel {
         ledStrip.position.set(-4.8, 2.75, -2.0);
         groundGroup.add(ledStrip);
 
-        // Sunken Living Room Lounge (inspired by video & photos)
-        const sofaGeo = new THREE.BoxGeometry(3.2, 0.45, 1.4);
-        const sofa = new THREE.Mesh(sofaGeo, mat.velvetChampagne);
+        // Ceiling Recessed Downlights
+        for (let i = -3.8; i <= 0.2; i += 1.3) {
+            const spotGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 12), mat.warmLed);
+            spotGlow.position.set(i, 2.78, 0);
+            groundGroup.add(spotGlow);
+        }
+
+        // Sunken Living Room Lounge (Telegram video & photos)
+        const sofa = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.45, 1.4), mat.velvetChampagne);
         sofa.position.set(-2.0, 0.3, -1.8);
         sofa.castShadow = true;
         groundGroup.add(sofa);
 
-        // Chaise extension
         const chaise = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.45, 1.8), mat.velvetChampagne);
         chaise.position.set(-3.2, 0.3, -0.6);
         groundGroup.add(chaise);
 
-        // Low Marble Coffee Table (Tom Ford styling as in ref)
+        // Low Honed Calacatta Marble Coffee Table
         const coffeeTable = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.8), mat.marble);
         coffeeTable.position.set(-1.8, 0.16, -0.6);
         coffeeTable.castShadow = true;
         groundGroup.add(coffeeTable);
 
-        // Indoor Japanese Courtyard Garden & Tree (from Telegram ref)
+        // Indoor Japanese Courtyard Garden & Tree (Telegram ref photo 13-05-50)
         const pebbleBed = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 0.08, 16), mat.pearlWall);
         pebbleBed.position.set(0.6, 0.04, -1.0);
         groundGroup.add(pebbleBed);
@@ -509,18 +598,25 @@ class VillaModel {
         groundGroup.add(treeTrunk);
 
         // Tree foliage canopy
-        for (let f = 0; f < 4; f++) {
-            const leafCanopy = new THREE.Mesh(new THREE.SphereGeometry(0.45 + f * 0.1, 8, 8), mat.mossWall);
-            leafCanopy.position.set(0.6 + (f % 2 - 0.5) * 0.4, 2.2 + f * 0.25, -1.0 + (f > 1 ? 0.3 : -0.2));
+        for (let f = 0; f < 5; f++) {
+            const leafCanopy = new THREE.Mesh(new THREE.SphereGeometry(0.42 + f * 0.08, 8, 8), mat.mossWall);
+            leafCanopy.position.set(0.6 + (f % 2 - 0.5) * 0.38, 2.2 + f * 0.22, -1.0 + (f > 1 ? 0.28 : -0.2));
             groundGroup.add(leafCanopy);
         }
 
-        // Floor-to-Ceiling Panoramic Glass Sliders (facing the pool/sea)
+        // Floor-to-Ceiling Panoramic Glass Sliders
         const frontGlass = new THREE.Mesh(new THREE.BoxGeometry(6.5, 2.7, 0.06), mat.glass);
         frontGlass.position.set(-1.5, 1.4, 2.5);
         groundGroup.add(frontGlass);
 
-        // Charcoal aluminium frame outlines
+        // Sheer pearl curtains
+        [-4.5, 1.5].forEach(cx => {
+            const curtain = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.65, 0.2), mat.sheerCurtain);
+            curtain.position.set(cx, 1.38, 2.4);
+            groundGroup.add(curtain);
+        });
+
+        // Charcoal aluminium frame mullions
         const hFrame1 = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.08, 0.12), mat.charcoalMetal);
         hFrame1.position.set(-1.5, 2.75, 2.5);
         const hFrame2 = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.08, 0.12), mat.charcoalMetal);
@@ -530,7 +626,8 @@ class VillaModel {
         this.explodedLayers.groundFloor = groundGroup;
         this.villaOverviewGroup.add(groundGroup);
 
-        // ── LAYER 2: Floating Cantilevered Oak Staircase with Glass Railing ──
+        // ── LAYER 2: Eurostairs Cantilevered Floating Staircase ──
+        // (Solid dark oak floating treads, under-step LED strips, frameless glass balustrade)
         const stairsGroup = new THREE.Group();
         stairsGroup.position.set(-4.7, 0.48, -4.2);
 
@@ -539,21 +636,24 @@ class VillaModel {
         const stepRun = 0.32;
 
         for (let s = 0; s < stepCount; s++) {
+            // Solid oak tread
             const tread = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.08, 0.3), mat.teak);
             tread.position.set(0.65, s * stepRise + 0.1, s * stepRun);
             tread.castShadow = true;
             stairsGroup.add(tread);
 
+            // Step-by-step under-tread LED light strip
             const stepLed = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.02, 0.02), mat.warmLed);
             stepLed.position.set(0.65, s * stepRise + 0.04, s * stepRun + 0.13);
             stairsGroup.add(stepLed);
         }
 
-        const balustradeGeo = new THREE.BoxGeometry(0.04, 1.4, stepCount * stepRun);
-        const balustrade = new THREE.Mesh(balustradeGeo, mat.glass);
+        // Structural frameless glass balustrade
+        const balustrade = new THREE.Mesh(new THREE.BoxGeometry(0.04, 1.4, stepCount * stepRun), mat.glass);
         balustrade.position.set(1.32, 1.8, (stepCount * stepRun) / 2);
         stairsGroup.add(balustrade);
 
+        // Champagne metal handrail cap
         const handrail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, stepCount * stepRun), mat.champagneMetal);
         handrail.position.set(1.32, 2.5, (stepCount * stepRun) / 2);
         stairsGroup.add(handrail);
@@ -561,7 +661,7 @@ class VillaModel {
         this.explodedLayers.stairs = stairsGroup;
         this.villaOverviewGroup.add(stairsGroup);
 
-        // ── LAYER 3: First Floor (Master Bedroom Suite & Luxury Spa Washroom) ──
+        // ── LAYER 3: First Floor Mezzanine (Master Suite & Spa Washroom) ──
         const upperGroup = new THREE.Group();
         upperGroup.position.y = 3.3;
 
@@ -571,7 +671,7 @@ class VillaModel {
         upperFloorSlab.receiveShadow = true;
         upperGroup.add(upperFloorSlab);
 
-        // King Platform Bed
+        // Low Japanese Platform King Bed
         const bedBase = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.25, 2.6), mat.flutedWood);
         bedBase.position.set(-2.4, 0.25, -1.8);
         const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.35, 2.2), mat.velvetChampagne);
@@ -585,7 +685,18 @@ class VillaModel {
         bedLed.position.set(-4.9, 2.2, -1.8);
         upperGroup.add(bedLed);
 
-        // Luxury Spa Bathroom Suite
+        // Bedside Nightstands & Drop Sconces
+        [-3.8, -1.0].forEach(bx => {
+            const nightstand = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.2, 0.45), mat.flutedWood);
+            nightstand.position.set(bx, 0.25, -2.5);
+            const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 1.2, 8), mat.charcoalMetal);
+            cord.position.set(bx, 1.8, -2.5);
+            const globe = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 16), mat.warmLed);
+            globe.position.set(bx, 1.2, -2.5);
+            upperGroup.add(nightstand, cord, globe);
+        });
+
+        // Luxury Spa Bathroom Suite (Calacatta marble & living moss wall)
         const bathGroup = new THREE.Group();
         bathGroup.position.set(0.6, 0.12, -2.2);
 
@@ -597,16 +708,27 @@ class VillaModel {
         mossAccent.position.set(1.0, 1.2, -1.78);
         bathGroup.add(mossAccent);
 
+        // Freestanding Matte Black Soaking Tub
         const tubGeo = new THREE.CylinderGeometry(0.55, 0.45, 0.6, 24);
         tubGeo.scale(1.4, 1.0, 0.85);
         const tub = new THREE.Mesh(tubGeo, mat.matteBlack);
         tub.position.set(-0.3, 0.35, -0.6);
         bathGroup.add(tub);
 
+        // Floor-Mounted Champagne Brass Tub Mixer / Faucet
+        const standPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.85, 12), mat.champagneMetal);
+        standPipe.position.set(0.25, 0.42, -0.6);
+        const spout = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.03, 0.03), mat.champagneMetal);
+        spout.position.set(0.18, 0.85, -0.6);
+        bathGroup.add(standPipe, spout);
+
+        // Fluted Wood Vanity & Marble Vessel Basin
         const vanity = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 0.45), mat.flutedWood);
         vanity.position.set(0.2, 0.8, -1.4);
         const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.15, 16), mat.marble);
         basin.position.set(0.2, 1.02, -1.4);
+
+        // Backlit Circular Vanity Mirror
         const mirror = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.02, 24), mat.warmLed);
         mirror.rotation.x = Math.PI / 2;
         mirror.position.set(0.2, 1.6, -1.74);
@@ -615,8 +737,7 @@ class VillaModel {
         upperGroup.add(bathGroup);
 
         // Master Balcony Cantilever with glass railing
-        const balconyGeo = new THREE.BoxGeometry(6.8, 0.15, 1.8);
-        const balcony = new THREE.Mesh(balconyGeo, mat.teak);
+        const balcony = new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.15, 1.8), mat.teak);
         balcony.position.set(-1.5, 0.0, 3.4);
         upperGroup.add(balcony);
 
@@ -631,14 +752,12 @@ class VillaModel {
         const roofGroup = new THREE.Group();
         roofGroup.position.y = 5.8;
 
-        const roofSlabGeo = new THREE.BoxGeometry(8.8, 0.28, 10.4);
-        const roofMain = new THREE.Mesh(roofSlabGeo, mat.zincRoof);
+        const roofMain = new THREE.Mesh(new THREE.BoxGeometry(8.8, 0.28, 10.4), mat.zincRoof);
         roofMain.rotation.z = -0.04;
         roofMain.castShadow = true;
         roofGroup.add(roofMain);
 
-        const soffitGeo = new THREE.BoxGeometry(8.6, 0.05, 10.2);
-        const soffit = new THREE.Mesh(soffitGeo, mat.teak);
+        const soffit = new THREE.Mesh(new THREE.BoxGeometry(8.6, 0.05, 10.2), mat.teak);
         soffit.position.y = -0.16;
         roofGroup.add(soffit);
 
@@ -655,18 +774,18 @@ class VillaModel {
         this.explodedLayers.roof = roofGroup;
         this.villaOverviewGroup.add(roofGroup);
 
-        // Add cottage to main scene
+        // Attach to main scene
         this.mainGroup.add(this.villaOverviewGroup);
     }
 
     /* ═══════════════════════════════════════════════════════════════════════════
-       MODEL 2: FULL MASTER RESORT (Biswajeet Ghosh, Balasore, Odisha)
+       MODEL 2: FULL 2.5 ACRE MASTER RESORT (Ashushri Creations, Balasore)
        ═══════════════════════════════════════════════════════════════════════════ */
     buildMasterResort() {
         const mat = this.getMaterials();
         this.resortGroup = new THREE.Group();
 
-        // ── 10 Cottages (Legend 1) Along North/West arc ──
+        // 10 Cottages (Legend 1)
         const cottageCoords = [
             { x: -16, z: -8, ry: 0 },
             { x: -13, z: -8, ry: 0 },
@@ -680,22 +799,20 @@ class VillaModel {
             { x: -18, z:  4, ry: Math.PI / 2 },
         ];
 
-        cottageCoords.forEach((pos, idx) => {
+        cottageCoords.forEach((pos) => {
             const cottage = this.createCompactCottage(mat);
             cottage.position.set(pos.x, 0, pos.z);
             cottage.rotation.y = pos.ry;
             this.resortGroup.add(cottage);
         });
 
-        // ── Grand Banquet Hall (Legend 3 - 2,000 sqft) ──
+        // Grand Banquet Hall (Legend 3 - 2,000 sqft)
         const banquet = new THREE.Group();
         const banquetBase = new THREE.Mesh(new THREE.BoxGeometry(8.5, 3.2, 7.0), mat.pearlWall);
         banquetBase.position.y = 1.6;
         banquetBase.castShadow = true;
-        
-        const bRoofGeo = new THREE.ConeGeometry(6.2, 2.5, 4);
         const redRoofMat = new THREE.MeshStandardMaterial({ color: 0x9E2B2B, roughness: 0.65 });
-        const bRoof = new THREE.Mesh(bRoofGeo, redRoofMat);
+        const bRoof = new THREE.Mesh(new THREE.ConeGeometry(6.2, 2.5, 4), redRoofMat);
         bRoof.rotation.y = Math.PI / 4;
         bRoof.position.y = 4.4;
         bRoof.castShadow = true;
@@ -703,21 +820,19 @@ class VillaModel {
         banquet.position.set(5.5, 0, -8.0);
         this.resortGroup.add(banquet);
 
-        // ── Kitchen & Dining (Legend 2 - 525 sqft) ──
+        // Kitchen & Dining (Legend 2 - 525 sqft)
         const kitchen = new THREE.Mesh(new THREE.BoxGeometry(4.0, 2.4, 3.0), mat.pearlWall);
         kitchen.position.set(-18, 1.2, 7.5);
         const kRoof = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.4, 3.4), redRoofMat);
         kRoof.position.set(-18, 2.6, 7.5);
         this.resortGroup.add(kitchen, kRoof);
 
-        // ── Resort Swimming Pool (Legend 8 - 1,800 sqft) ──
+        // Resort Swimming Pool (Legend 8 - 1,800 sqft)
         const poolGroup = new THREE.Group();
         const poolBasinGeo = new THREE.CylinderGeometry(3.8, 3.4, 0.8, 32);
         poolBasinGeo.scale(1.4, 1.0, 0.9);
-        const poolRimMat = new THREE.MeshStandardMaterial({ color: 0xD4C8B4, roughness: 0.5 });
-        const poolBasin = new THREE.Mesh(poolBasinGeo, poolRimMat);
+        const poolBasin = new THREE.Mesh(poolBasinGeo, new THREE.MeshStandardMaterial({ color: 0xD4C8B4, roughness: 0.5 }));
         poolBasin.position.y = 0.35;
-        
         const poolWaterGeo = new THREE.CircleGeometry(3.6, 32);
         poolWaterGeo.scale(1.4, 0.9);
         const poolWater = new THREE.Mesh(poolWaterGeo, mat.poolWater);
@@ -727,7 +842,7 @@ class VillaModel {
         poolGroup.position.set(-11, 0, -2.5);
         this.resortGroup.add(poolGroup);
 
-        // ── Entrance Water Fountain (Legend 15 - central roundabout) ──
+        // Central Water Fountain (Legend 15)
         const fountain = new THREE.Group();
         const fBasin = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.2, 0.5, 24), mat.pearlWall);
         fBasin.position.y = 0.25;
@@ -739,24 +854,22 @@ class VillaModel {
         fountain.position.set(13.5, 0, 2.0);
         this.resortGroup.add(fountain);
 
-        // ── Camp Fire & Open Lounge (Legend 7) ──
+        // Camp Fire Pit & Open Lounge (Legend 7)
         const campFire = new THREE.Group();
         const firePit = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.4, 16), mat.charcoalMetal);
         firePit.position.y = 0.2;
         const embers = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), mat.warmLed);
         embers.position.y = 0.4;
-        const benchGeo = new THREE.RingGeometry(1.8, 2.5, 24);
-        const bench = new THREE.Mesh(benchGeo, mat.pearlWall);
+        const bench = new THREE.Mesh(new THREE.RingGeometry(1.8, 2.5, 24), mat.pearlWall);
         bench.rotation.x = -Math.PI / 2;
         bench.position.y = 0.35;
         campFire.add(firePit, embers, bench);
         campFire.position.set(-8.5, 0, 7.5);
         this.resortGroup.add(campFire);
 
-        // ── Tree House (Legend 12) ──
+        // Tree House (Legend 12)
         const treehouse = new THREE.Group();
-        const trunkGeo = new THREE.CylinderGeometry(0.35, 0.5, 5.0, 8);
-        const trunk = new THREE.Mesh(trunkGeo, mat.teak);
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 5.0, 8), mat.teak);
         trunk.position.y = 2.5;
         const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.8, 2.2), mat.flutedWood);
         cabin.position.y = 4.2;
@@ -767,12 +880,7 @@ class VillaModel {
         treehouse.position.set(2.5, 0, 3.5);
         this.resortGroup.add(treehouse);
 
-        // ── Open Stage (Legend 13) ──
-        const stage = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.6, 2.8), mat.teak);
-        stage.position.set(5.5, 0.3, 7.5);
-        this.resortGroup.add(stage);
-
-        // ── Mud Houses (Legend 14 - 4 Units) ──
+        // Mud House Cabins (Legend 14 - 4 Units)
         for (let m = 0; m < 4; m++) {
             const mudHut = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.3, 1.6, 16), mat.pearlWall);
             mudHut.position.set(9.0 + m * 2.2, 0.8, 6.5 + m * 0.4);
@@ -781,13 +889,7 @@ class VillaModel {
             this.resortGroup.add(mudHut, hutRoof);
         }
 
-        // ── Badminton Court (Legend 9) ──
-        const court = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 6.0), new THREE.MeshStandardMaterial({ color: 0x3A6F54 }));
-        court.rotation.x = -Math.PI / 2;
-        court.position.set(-21, 0.02, -5.5);
-        this.resortGroup.add(court);
-
-        // ── Grand Entrance Gate (Legend 10) ──
+        // Grand Entrance Gate (Legend 10)
         const gateGroup = new THREE.Group();
         const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.8, 3.5, 0.8), mat.pearlWall);
         pillarL.position.set(0, 1.75, -2.5);
@@ -808,76 +910,63 @@ class VillaModel {
         const base = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.8, 2.2), mat.pearlWall);
         base.position.y = 0.9;
         base.castShadow = true;
-        
         const redRoofMat = new THREE.MeshStandardMaterial({ color: 0xA63232, roughness: 0.65 });
         const roof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.3, 4), redRoofMat);
         roof.rotation.y = Math.PI / 4;
         roof.position.y = 2.4;
         roof.castShadow = true;
-        
         const door = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.1, 0.05), mat.teak);
         door.position.set(0, 0.6, 1.12);
-        
         c.add(base, roof, door);
         return c;
     }
 
     buildLandscape() {
-        const mat = this.getMaterials();
-
-        const groundGeo = new THREE.PlaneGeometry(120, 120);
-        const groundMat = new THREE.MeshStandardMaterial({
-            color: 0xE4D3B8,
-            roughness: 0.95,
-        });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
+        // Coastal Sand Terrain
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(120, 120),
+            new THREE.MeshStandardMaterial({ color: 0xE4D3B8, roughness: 0.95 })
+        );
         ground.rotation.x = -Math.PI / 2;
         ground.position.y = -0.05;
         ground.receiveShadow = true;
         this.scene.add(ground);
 
-        const lawnGeo = new THREE.PlaneGeometry(24, 16);
-        const lawnMat = new THREE.MeshStandardMaterial({
-            color: 0x3D7344,
-            roughness: 0.85,
-        });
-        const lawn = new THREE.Mesh(lawnGeo, lawnMat);
+        // Resort Main Lawn
+        const lawn = new THREE.Mesh(
+            new THREE.PlaneGeometry(24, 16),
+            new THREE.MeshStandardMaterial({ color: 0x3D7344, roughness: 0.85 })
+        );
         lawn.rotation.x = -Math.PI / 2;
         lawn.position.set(6.0, 0.01, -0.5);
         lawn.receiveShadow = true;
         this.resortGroup.add(lawn);
 
-        const roadGeo = new THREE.PlaneGeometry(26, 4.2);
-        const roadMat = new THREE.MeshStandardMaterial({
-            color: 0xC9B99E,
-            roughness: 0.75,
-        });
-        const road = new THREE.Mesh(roadGeo, roadMat);
-        road.rotation.x = -Math.PI / 2;
-        road.position.set(11.0, 0.02, 2.0);
-        this.resortGroup.add(road);
+        // Ocean Water
+        this.oceanWaterMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(140, 50),
+            new THREE.MeshPhysicalMaterial({
+                color: 0x0E5468,
+                transparent: true,
+                opacity: 0.8,
+                roughness: 0.05,
+                metalness: 0.2,
+            })
+        );
+        this.oceanWaterMesh.rotation.x = -Math.PI / 2;
+        this.oceanWaterMesh.position.set(0, -0.15, 55);
+        this.scene.add(this.oceanWaterMesh);
 
-        const oceanGeo = new THREE.PlaneGeometry(140, 50);
-        const oceanMat = new THREE.MeshPhysicalMaterial({
-            color: 0x0E5468,
-            transparent: true,
-            opacity: 0.8,
-            roughness: 0.05,
-            metalness: 0.2,
-        });
-        this.waterMesh = new THREE.Mesh(oceanGeo, oceanMat);
-        this.waterMesh.rotation.x = -Math.PI / 2;
-        this.waterMesh.position.set(0, -0.15, 55);
-        this.scene.add(this.waterMesh);
-
-        const planGeo = new THREE.PlaneGeometry(42, 26);
-        const planMat = new THREE.MeshBasicMaterial({
-            color: 0xFFFFFF,
-            transparent: true,
-            opacity: 0.0,
-            side: THREE.DoubleSide
-        });
-        this.planPlaneMesh = new THREE.Mesh(planGeo, planMat);
+        // Blueprint Projection Plane
+        this.planPlaneMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(42, 26),
+            new THREE.MeshBasicMaterial({
+                color: 0xFFFFFF,
+                transparent: true,
+                opacity: 0.0,
+                side: THREE.DoubleSide
+            })
+        );
         this.planPlaneMesh.rotation.x = -Math.PI / 2;
         this.planPlaneMesh.position.set(0, 0.06, 0);
         this.scene.add(this.planPlaneMesh);
@@ -908,9 +997,11 @@ class VillaModel {
         this.ambientParticles.push(points);
     }
 
+    /* ═══════════════════════════════════════════════════════════════════════════
+       INTERACTIVE CONTROLS & INSPECTION API
+       ═══════════════════════════════════════════════════════════════════════════ */
     setMode(mode) {
         this.activeMode = mode;
-        
         if (mode === 'villa') {
             this.villaOverviewGroup.visible = true;
             this.resortGroup.visible = false;
@@ -925,13 +1016,22 @@ class VillaModel {
             this.targetCameraPos.set(0, 28, 22);
             this.targetLookAt.set(0, 0, 0);
             this.targetExplosion = 0.0;
-        } else if (mode === 'exploded') {
-            this.villaOverviewGroup.visible = true;
-            this.resortGroup.visible = false;
-            if (this.planPlaneMesh) this.planPlaneMesh.material.opacity = 0.0;
-            this.targetCameraPos.set(7, 7.5, 11);
-            this.targetLookAt.set(0, 3.5, 0);
-            this.targetExplosion = 1.0;
+        }
+    }
+
+    setFreeOrbit(enabled) {
+        this.isFreeOrbit = enabled;
+        if (this.controls) {
+            this.controls.enabled = enabled;
+            if (enabled) {
+                this.controls.target.copy(this.currentLookAt);
+            }
+        }
+    }
+
+    setRotationAngle(angle) {
+        if (this.villaOverviewGroup) {
+            this.villaOverviewGroup.rotation.y = angle;
         }
     }
 
@@ -939,28 +1039,71 @@ class VillaModel {
         this.targetExplosion = Math.max(0, Math.min(1, val));
     }
 
+    toggleWireframe(enabled) {
+        this.isWireframe = (enabled !== undefined) ? enabled : !this.isWireframe;
+        const target = (this.activeMode === 'resort') ? this.resortGroup : this.villaOverviewGroup;
+        target.traverse((child) => {
+            if (child.isMesh && child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => m.wireframe = this.isWireframe);
+                } else {
+                    child.material.wireframe = this.isWireframe;
+                }
+            }
+        });
+        return this.isWireframe;
+    }
+
     focusHotspot(name) {
         this.setMode('villa');
         switch (name) {
+            case 'front':
+                this.targetCameraPos.set(0, 4.0, 11.5);
+                this.targetLookAt.set(0, 1.8, 0);
+                this.setRotationAngle(0);
+                this.setExplosionProgress(0);
+                break;
+            case 'infinityPool':
+                this.targetCameraPos.set(5.5, 2.2, 7.5);
+                this.targetLookAt.set(3.0, 0.8, 2.5);
+                this.setRotationAngle(-0.7);
+                this.setExplosionProgress(0);
+                break;
+            case 'exploded':
+                this.targetCameraPos.set(7, 7.5, 11);
+                this.targetLookAt.set(0, 3.5, 0);
+                this.setRotationAngle(-Math.PI * 0.75);
+                this.setExplosionProgress(1.0);
+                break;
             case 'masterSuite':
                 this.targetCameraPos.set(-2.0, 4.4, 4.5);
                 this.targetLookAt.set(-2.4, 3.8, -1.5);
+                this.setRotationAngle(-Math.PI * 0.95);
+                this.setExplosionProgress(0.35);
                 break;
             case 'bathroom':
-                this.targetCameraPos.set(1.5, 4.2, 1.5);
+                this.targetCameraPos.set(1.8, 4.3, 2.0);
                 this.targetLookAt.set(0.6, 3.6, -1.8);
+                this.setRotationAngle(-Math.PI * 1.3);
+                this.setExplosionProgress(0.35);
                 break;
             case 'sunkenLounge':
-                this.targetCameraPos.set(-1.0, 1.8, 3.5);
-                this.targetLookAt.set(-2.0, 0.8, -1.0);
+                this.targetCameraPos.set(-1.0, 2.0, 3.8);
+                this.targetLookAt.set(-2.0, 0.9, -1.0);
+                this.setRotationAngle(-Math.PI * 1.65);
+                this.setExplosionProgress(0.2);
                 break;
             case 'floatingStairs':
                 this.targetCameraPos.set(-3.2, 2.2, -1.0);
                 this.targetLookAt.set(-4.5, 1.8, -3.2);
+                this.setRotationAngle(-Math.PI * 1.88);
+                this.setExplosionProgress(0.15);
                 break;
-            case 'infinityPool':
-                this.targetCameraPos.set(5.5, 1.8, 6.5);
-                this.targetLookAt.set(3.0, 0.5, 2.5);
+            case 'aerial':
+                this.targetCameraPos.set(0, 14, 16);
+                this.targetLookAt.set(0, 2, 0);
+                this.setRotationAngle(-Math.PI * 2);
+                this.setExplosionProgress(0);
                 break;
             default:
                 this.targetCameraPos.set(0, 4.5, 12);
@@ -968,26 +1111,110 @@ class VillaModel {
         }
     }
 
+    /* ═══════════════════════════════════════════════════════════════════════════
+       NATIVE 3D MODEL EXPORTER (GLTF / GLB) FOR BLENDER & CAD SOFTWARE
+       ═══════════════════════════════════════════════════════════════════════════ */
+    exportGLTF(binary = true, onComplete) {
+        if (typeof THREE.GLTFExporter === 'undefined') {
+            console.error('THREE.GLTFExporter is not loaded');
+            if (onComplete) onComplete(null, 'Exporter not available');
+            return;
+        }
+
+        const exporter = new THREE.GLTFExporter();
+        const options = {
+            binary: binary,
+            trs: false,
+            onlyVisible: true,
+            truncateDrawRange: true,
+            embedImages: true
+        };
+
+        const target = (this.activeMode === 'resort') ? this.resortGroup : this.villaOverviewGroup;
+
+        // Temporarily reset explosion to guarantee clean CAD assembly
+        const prevExp = this.explosionFactor;
+        if (this.explodedLayers.roof) this.explodedLayers.roof.position.y = 5.8;
+        if (this.explodedLayers.upperFloor) this.explodedLayers.upperFloor.position.y = 3.3;
+        if (this.explodedLayers.stairs) this.explodedLayers.stairs.position.y = 0.48;
+
+        exporter.parse(
+            target,
+            (result) => {
+                // Restore cutaway position
+                if (this.explodedLayers.roof) this.explodedLayers.roof.position.y = 5.8 + prevExp * 4.2;
+                if (this.explodedLayers.upperFloor) this.explodedLayers.upperFloor.position.y = 3.3 + prevExp * 1.8;
+                if (this.explodedLayers.stairs) this.explodedLayers.stairs.position.y = 0.48 + prevExp * 0.9;
+
+                const baseName = (this.activeMode === 'resort') 
+                    ? 'AER_Balasore_Master_Resort_SitePlan' 
+                    : 'AER_Balasore_Luxury_Villa_Cottage';
+
+                const fileName = `${baseName}.${binary ? 'glb' : 'gltf'}`;
+
+                if (result instanceof ArrayBuffer) {
+                    this.saveArrayBuffer(result, fileName);
+                } else {
+                    const output = JSON.stringify(result, null, 2);
+                    this.saveString(output, fileName);
+                }
+
+                if (onComplete) onComplete(fileName);
+            },
+            options
+        );
+    }
+
+    saveArrayBuffer(buffer, filename) {
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+    }
+
+    saveString(text, filename) {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════════════
+       RENDER LOOP & ANIMATIONS
+       ═══════════════════════════════════════════════════════════════════════════ */
     animate() {
         requestAnimationFrame(() => this.animate());
 
         const elapsed = this.clock.getElapsedTime();
 
-        this.camera.position.lerp(this.targetCameraPos, 0.04);
-        this.currentLookAt.lerp(this.targetLookAt, 0.04);
-        
-        const parallaxX = this.mouseX * 0.4;
-        const parallaxY = this.mouseY * 0.25;
-        this.camera.lookAt(
-            this.currentLookAt.x + parallaxX,
-            this.currentLookAt.y - parallaxY,
-            this.currentLookAt.z
-        );
+        // If in Free Orbit mode, OrbitControls controls camera directly
+        if (this.isFreeOrbit && this.controls) {
+            this.controls.update();
+        } else {
+            // Scroll Tour mode: smoothly lerp camera position and lookAt target
+            this.camera.position.lerp(this.targetCameraPos, 0.05);
+            this.currentLookAt.lerp(this.targetLookAt, 0.05);
+            this.camera.lookAt(this.currentLookAt);
+        }
 
-        this.explosionFactor += (this.targetExplosion - this.explosionFactor) * 0.06;
+        // Auto-rotation toggle
+        if (this.autoRotate && this.villaOverviewGroup) {
+            this.villaOverviewGroup.rotation.y += 0.005 * this.autoRotateSpeed;
+        }
+
+        // Exploded Cutaway animation lerp
+        this.explosionFactor += (this.targetExplosion - this.explosionFactor) * 0.08;
         if (this.explodedLayers.roof) {
             this.explodedLayers.roof.position.y = 5.8 + this.explosionFactor * 4.2;
-            this.explodedLayers.roof.rotation.y = this.explosionFactor * 0.05;
+            this.explodedLayers.roof.rotation.y = this.explosionFactor * 0.04;
         }
         if (this.explodedLayers.upperFloor) {
             this.explodedLayers.upperFloor.position.y = 3.3 + this.explosionFactor * 1.8;
@@ -996,13 +1223,15 @@ class VillaModel {
             this.explodedLayers.stairs.position.y = 0.48 + this.explosionFactor * 0.9;
         }
 
+        // Ambient ripples in pool and ocean
         if (this.poolWaterMesh) {
             this.poolWaterMesh.position.y = 0.42 + Math.sin(elapsed * 2.2) * 0.015;
         }
-        if (this.waterMesh) {
-            this.waterMesh.position.y = -0.15 + Math.sin(elapsed * 1.2) * 0.04;
+        if (this.oceanWaterMesh) {
+            this.oceanWaterMesh.position.y = -0.15 + Math.sin(elapsed * 1.2) * 0.04;
         }
 
+        // Dust particle drift
         this.ambientParticles.forEach(p => {
             const arr = p.geometry.attributes.position.array;
             for (let i = 0; i < arr.length; i += 3) {
