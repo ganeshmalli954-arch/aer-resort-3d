@@ -1,188 +1,175 @@
 /* ═══════════════════════════════════════════════════════════════════════════════
-   AER — Main Application Controller
-   Handles:
-   - 3D Model Initialization & ScrollAnimationController
-   - Top HUD Toolbar Actions (Free Orbit, Wireframe, Lighting, Exploded, Export GLB)
-   - Telegram References Drawer & High-Res Lightbox Modal
-   - Keyboard Shortcuts (Space, O, W, L, E, G, R, Esc)
-   - Toast Notifications & Custom Cursor
+   AER — Anandamayee Eco Resort (Balasore, Odisha)
+   Dedicated 3D Architectural Explorer Controller
+   Connects Three.js VillaModel, ScrollAnimationController, HUD Tools,
+   Reference Drawer, Lightbox Modal, Keyboard Shortcuts, and GLB Exporter
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    /* ── 1. Preloader Dismiss ── */
-    const preloader = document.getElementById('preloader');
-    const dismissPreloader = () => {
-        if (preloader && !preloader.classList.contains('loaded')) {
-            preloader.classList.add('loaded');
-            showToast('🏡 3D Villa Model Ready — Scroll or drag to explore');
-        }
-    };
-    window.addEventListener('load', () => setTimeout(dismissPreloader, 1500));
-    setTimeout(dismissPreloader, 3500); // Safety fallback
-
-    /* ── 2. Initialize 3D Engine & Animation Controller ── */
-    const villaModel = new VillaModel();
-    const scrollController = new ScrollAnimationController(villaModel);
-
-    /* ── 3. Toast Notifications ── */
+    /* ── 1. Toast Notification System ── */
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toast-msg');
     let toastTimeout = null;
 
-    function showToast(message, duration = 3000) {
+    function showToast(message, duration = 2800) {
         if (!toast || !toastMsg) return;
         toastMsg.textContent = message;
-        toast.classList.add('visible');
+        toast.classList.add('show');
         if (toastTimeout) clearTimeout(toastTimeout);
         toastTimeout = setTimeout(() => {
-            toast.classList.remove('visible');
+            toast.classList.remove('show');
         }, duration);
     }
 
-    /* ── 4. Viewport Mode Switch (Luxury Villa 3D vs Master Site Plan 3D) ── */
+    /* ── 2. Initialize 3D Engine & Scroll Controller ── */
+    const villaModel = new VillaModel();
+    const scrollController = new ScrollAnimationController(villaModel);
+
+    /* ── 3. Preloader Dismissal ── */
+    const preloader = document.getElementById('preloader');
+    const dismissPreloader = () => {
+        if (preloader && !preloader.classList.contains('loaded')) {
+            preloader.classList.add('loaded');
+            showToast('3D Architectural Model Loaded • Scroll to Explore 360°', 3500);
+        }
+    };
+    window.addEventListener('load', () => setTimeout(dismissPreloader, 1000));
+    setTimeout(dismissPreloader, 2500); // Fail-safe timer
+
+    /* ── 4. 3D Model Mode Switch (Villa Cottage vs Master Site Plan) ── */
     const btnModeVilla = document.getElementById('btn-mode-villa');
     const btnModeResort = document.getElementById('btn-mode-resort');
     const roomDock = document.getElementById('room-dock');
     const inspectionCard = document.getElementById('inspection-card');
 
-    if (btnModeVilla && btnModeResort) {
-        btnModeVilla.addEventListener('click', () => {
+    function setMode(mode) {
+        if (mode === 'villa') {
             btnModeVilla.classList.add('active');
             btnModeResort.classList.remove('active');
             villaModel.setMode('villa');
-            if (roomDock) roomDock.style.display = 'flex';
-            if (inspectionCard) inspectionCard.style.display = 'block';
-            showToast('🏡 Switched to Luxury Villa 3D Model');
-        });
-
-        btnModeResort.addEventListener('click', () => {
+            if (roomDock) roomDock.style.display = '';
+            if (inspectionCard) inspectionCard.style.display = '';
+            showToast('Mode: Luxury Villa 3D (225 sqft Cottage)');
+        } else {
             btnModeResort.classList.add('active');
             btnModeVilla.classList.remove('active');
             villaModel.setMode('resort');
-            if (roomDock) roomDock.style.display = 'none';
-            if (inspectionCard) inspectionCard.style.display = 'none';
-            showToast('🗺️ Switched to 2.5 Acre Master Plan (Ashushri Creations)');
-        });
+            showToast('Mode: 2.5 Acre Master Plan (Ashushri Creations)');
+        }
     }
 
-    /* ── 5. Navigation Mode Toggle (Free Orbit vs Scroll Tour) ── */
+    if (btnModeVilla) btnModeVilla.addEventListener('click', () => setMode('villa'));
+    if (btnModeResort) btnModeResort.addEventListener('click', () => setMode('resort'));
+
+    /* ── 5. Free 3D OrbitControls vs Scroll Tour Mode Toggle ── */
     const btnToggleOrbit = document.getElementById('btn-toggle-orbit');
     const orbitIcon = document.getElementById('orbit-icon');
     const orbitLabel = document.getElementById('orbit-label');
-    const hudHint = document.getElementById('hud-hint');
 
-    let freeOrbitActive = false;
+    function toggleOrbitMode() {
+        const nextState = !villaModel.isFreeOrbit;
+        villaModel.setFreeOrbit(nextState);
 
-    function toggleFreeOrbit(state) {
-        freeOrbitActive = (state !== undefined) ? state : !freeOrbitActive;
-        villaModel.setFreeOrbit(freeOrbitActive);
-
-        if (btnToggleOrbit) {
-            btnToggleOrbit.classList.toggle('active', freeOrbitActive);
-        }
-        if (orbitIcon && orbitLabel) {
-            if (freeOrbitActive) {
-                orbitIcon.textContent = '📜';
-                orbitLabel.textContent = 'Scroll Tour';
-                if (hudHint) hudHint.textContent = '🕹️ Free Orbit: Click & drag to rotate, wheel to zoom, right-click to pan';
-                showToast('🕹️ Free 3D Orbit Enabled — Drag mouse to rotate freely');
-            } else {
-                orbitIcon.textContent = '🕹️';
-                orbitLabel.textContent = 'Free Orbit';
-                if (hudHint) hudHint.textContent = '🖱️ Scroll mouse wheel or drag scrubber to rotate villa 360°';
-                showToast('📜 Scroll Tour Enabled — Scroll to inspect rooms');
-            }
+        if (nextState) {
+            btnToggleOrbit.classList.add('active');
+            orbitIcon.textContent = '📜';
+            orbitLabel.textContent = 'Scroll Tour';
+            showToast('Free 3D Orbit: Drag to Rotate • Right-click to Pan • Wheel to Zoom', 3500);
+        } else {
+            btnToggleOrbit.classList.remove('active');
+            orbitIcon.textContent = '🕹️';
+            orbitLabel.textContent = 'Free Orbit';
+            showToast('Scroll Tour Active: Mouse wheel controls 360° Villa Inspection', 2800);
         }
     }
 
-    if (btnToggleOrbit) {
-        btnToggleOrbit.addEventListener('click', () => toggleFreeOrbit());
-    }
+    if (btnToggleOrbit) btnToggleOrbit.addEventListener('click', toggleOrbitMode);
 
-    /* ── 6. Exploded Cutaway View Toggle ── */
+    /* ── 6. Exploded Cutaway Toggle ── */
     const btnToggleExploded = document.getElementById('btn-toggle-exploded');
-    let explodedActive = false;
+    const cutawaySlider = document.getElementById('cutaway-slider');
+    const cutawayVal = document.getElementById('cutaway-val');
 
-    if (btnToggleExploded) {
-        btnToggleExploded.addEventListener('click', () => {
-            explodedActive = !explodedActive;
-            btnToggleExploded.classList.toggle('active', explodedActive);
-            const targetVal = explodedActive ? 1.0 : 0.0;
-            villaModel.setExplosionProgress(targetVal);
+    function toggleExploded() {
+        const isExploded = villaModel.targetExplosion > 0.4;
+        const targetVal = isExploded ? 0.0 : 1.0;
 
-            const cutawaySlider = document.getElementById('cutaway-slider');
-            const cutawayVal = document.getElementById('cutaway-val');
-            if (cutawaySlider) cutawaySlider.value = targetVal * 100;
-            if (cutawayVal) cutawayVal.textContent = `${Math.round(targetVal * 100)}%`;
+        villaModel.setExplosionProgress(targetVal);
+        btnToggleExploded.classList.toggle('active', !isExploded);
 
-            showToast(explodedActive ? '💥 Exploded Cutaway Lifted (Roof +4.2m)' : '🏡 Villa Assembled');
-        });
+        if (cutawaySlider) cutawaySlider.value = Math.round(targetVal * 100);
+        if (cutawayVal) cutawayVal.textContent = `${Math.round(targetVal * 100)}%`;
+
+        showToast(isExploded ? 'Villa Re-assembled' : 'Exploded Cutaway: Roof & Mezzanine Lifted');
     }
+
+    if (btnToggleExploded) btnToggleExploded.addEventListener('click', toggleExploded);
 
     /* ── 7. Wireframe CAD Mesh Toggle ── */
     const btnToggleWireframe = document.getElementById('btn-toggle-wireframe');
-    if (btnToggleWireframe) {
-        btnToggleWireframe.addEventListener('click', () => {
-            const isWireframe = villaModel.toggleWireframe();
-            btnToggleWireframe.classList.toggle('active', isWireframe);
-            showToast(isWireframe ? '📐 Wireframe CAD Mesh Enabled' : '🎨 PBR Materials Restored');
-        });
+
+    function toggleWireframe() {
+        const active = villaModel.toggleWireframe();
+        btnToggleWireframe.classList.toggle('active', active);
+        showToast(active ? 'CAD Wireframe Mode Enabled' : 'PBR Realistic Shading Mode');
     }
 
-    /* ── 8. Lighting Mode Cycle ── */
+    if (btnToggleWireframe) btnToggleWireframe.addEventListener('click', toggleWireframe);
+
+    /* ── 8. Cycle Lighting Modes (Golden Sunset / Luxury Night / Studio Day) ── */
     const btnCycleLighting = document.getElementById('btn-cycle-lighting');
     const lightingIcon = document.getElementById('lighting-icon');
     const lightingLabel = document.getElementById('lighting-label');
-    const lightingModes = ['golden', 'night', 'studio'];
-    let currentLightIndex = 0;
 
-    if (btnCycleLighting) {
-        btnCycleLighting.addEventListener('click', () => {
-            currentLightIndex = (currentLightIndex + 1) % lightingModes.length;
-            const newMode = lightingModes[currentLightIndex];
-            villaModel.setLightingMode(newMode);
+    const lightingModes = [
+        { id: 'golden', label: 'Golden', icon: '🌅', name: 'Golden Hour Sunset' },
+        { id: 'night',  label: 'Night',  icon: '🌙', name: 'Luxury Night & Warm LED Cove' },
+        { id: 'studio', label: 'Studio', icon: '💡', name: 'Architectural Daylight' }
+    ];
+    let currentLightingIdx = 0;
 
-            if (newMode === 'golden') {
-                lightingIcon.textContent = '🌅';
-                lightingLabel.textContent = 'Golden';
-                showToast('🌅 Golden Hour Sunset (Warm 2700K)');
-            } else if (newMode === 'night') {
-                lightingIcon.textContent = '🌙';
-                lightingLabel.textContent = 'Night LEDs';
-                showToast('🌙 Luxury Night with Warm Cove LEDs & Cyan Pool');
-            } else if (newMode === 'studio') {
-                lightingIcon.textContent = '☀️';
-                lightingLabel.textContent = 'Studio Day';
-                showToast('☀️ Architectural Studio Daylight');
-            }
-        });
+    function cycleLighting() {
+        currentLightingIdx = (currentLightingIdx + 1) % lightingModes.length;
+        const mode = lightingModes[currentLightingIdx];
+
+        villaModel.setLightingMode(mode.id);
+        if (lightingIcon) lightingIcon.textContent = mode.icon;
+        if (lightingLabel) lightingLabel.textContent = mode.label;
+
+        showToast(`Lighting: ${mode.name}`);
     }
+
+    if (btnCycleLighting) btnCycleLighting.addEventListener('click', cycleLighting);
 
     /* ── 9. Auto-Rotate 360° Toggle ── */
     const btnAutoRotate = document.getElementById('btn-auto-rotate');
-    if (btnAutoRotate) {
-        btnAutoRotate.addEventListener('click', () => {
-            villaModel.autoRotate = !villaModel.autoRotate;
-            btnAutoRotate.classList.toggle('active', villaModel.autoRotate);
-            showToast(villaModel.autoRotate ? '🔄 Auto-Rotation Started' : '⏸️ Auto-Rotation Paused');
-        });
+
+    function toggleAutoRotate() {
+        villaModel.autoRotate = !villaModel.autoRotate;
+        btnAutoRotate.classList.toggle('active', villaModel.autoRotate);
+        showToast(`Auto 360° Rotation: ${villaModel.autoRotate ? 'ON' : 'OFF'}`);
     }
 
-    /* ── 10. Native 3D Model Exporter (.GLB / .GLTF) ── */
-    const btnExportGLB = document.getElementById('btn-export-glb');
-    if (btnExportGLB) {
-        btnExportGLB.addEventListener('click', () => {
-            showToast('⏳ Exporting 3D Model (.GLB)... Please wait', 4000);
-            btnExportGLB.disabled = true;
+    if (btnAutoRotate) btnAutoRotate.addEventListener('click', toggleAutoRotate);
+
+    /* ── 10. Native GLB 3D Model Export for Blender / 3ds Max ── */
+    const btnExportGlb = document.getElementById('btn-export-glb');
+
+    if (btnExportGlb) {
+        btnExportGlb.addEventListener('click', () => {
+            showToast('Generating binary .GLB 3D model with embedded PBR materials...', 3500);
+            btnExportGlb.style.pointerEvents = 'none';
+            btnExportGlb.style.opacity = '0.6';
 
             setTimeout(() => {
-                villaModel.exportGLTF(true, (fileName, err) => {
-                    btnExportGLB.disabled = false;
+                villaModel.exportGLTF(true, (filename, err) => {
+                    btnExportGlb.style.pointerEvents = '';
+                    btnExportGlb.style.opacity = '';
                     if (err) {
-                        showToast(`❌ Export Error: ${err}`, 5000);
+                        showToast(`Export Error: ${err}`, 4000);
                     } else {
-                        showToast(`✓ Downloaded ${fileName} — Ready for Blender & CAD!`, 5000);
+                        showToast(`✓ Downloaded 3D Model: ${filename}`, 4500);
                     }
                 });
             }, 100);
@@ -192,25 +179,31 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ── 11. Telegram Reference Materials Drawer ── */
     const btnOpenRefs = document.getElementById('btn-open-refs');
     const btnCloseRefs = document.getElementById('btn-close-refs');
-    const refDrawer = document.getElementById('reference-drawer');
+    const referenceDrawer = document.getElementById('reference-drawer');
 
-    if (btnOpenRefs && refDrawer) {
+    if (btnOpenRefs && referenceDrawer) {
         btnOpenRefs.addEventListener('click', () => {
-            refDrawer.classList.add('open');
-            btnOpenRefs.classList.add('active');
-        });
-    }
-    if (btnCloseRefs && refDrawer) {
-        btnCloseRefs.addEventListener('click', () => {
-            refDrawer.classList.remove('open');
-            if (btnOpenRefs) btnOpenRefs.classList.remove('active');
-            // Pause any playing drawer video
-            const v = refDrawer.querySelector('video');
-            if (v && !v.paused) v.pause();
+            referenceDrawer.classList.add('open');
         });
     }
 
-    /* ── 12. High-Res Lightbox Modal ── */
+    if (btnCloseRefs && referenceDrawer) {
+        btnCloseRefs.addEventListener('click', () => {
+            referenceDrawer.classList.remove('open');
+        });
+    }
+
+    /* ── 12. Minimize Inspection Card Toggle ── */
+    const btnMinimizeCard = document.getElementById('btn-minimize-card');
+    if (btnMinimizeCard && inspectionCard) {
+        btnMinimizeCard.addEventListener('click', () => {
+            inspectionCard.classList.toggle('minimized');
+            const isMin = inspectionCard.classList.contains('minimized');
+            btnMinimizeCard.innerHTML = isMin ? '<span class="minimize-icon">◀</span>' : '<span class="minimize-icon">✕</span>';
+        });
+    }
+
+    /* ── 13. Lightbox Modal for Reference Inspection ── */
     const lightboxModal = document.getElementById('lightbox-modal');
     const modalImg = document.getElementById('modal-img');
     const modalCaption = document.getElementById('modal-caption');
@@ -219,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openLightbox(src, caption) {
         if (!lightboxModal || !modalImg) return;
         modalImg.src = src;
-        modalCaption.textContent = caption || '';
+        if (modalCaption) modalCaption.textContent = caption || 'Reference Photo';
         lightboxModal.classList.add('open');
     }
 
@@ -227,28 +220,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (lightboxModal) lightboxModal.classList.remove('open');
     }
 
-    if (btnCloseModal) {
-        btnCloseModal.addEventListener('click', closeLightbox);
-    }
+    if (btnCloseModal) btnCloseModal.addEventListener('click', closeLightbox);
     if (lightboxModal) {
         lightboxModal.addEventListener('click', (e) => {
             if (e.target === lightboxModal) closeLightbox();
         });
     }
 
-    // Inspection Card Thumbnail Click -> Open Lightbox
+    // Connect Inspection Card Thumbnail to Lightbox
     const cardRefBox = document.getElementById('card-ref-box');
     if (cardRefBox) {
         cardRefBox.addEventListener('click', () => {
-            const src = cardRefBox.dataset.fullSrc || cardRefBox.querySelector('img')?.src;
-            const caption = cardRefBox.dataset.title || 'Telegram Reference Detail';
-            if (src) openLightbox(src, caption);
+            const img = document.getElementById('card-ref-img');
+            const title = document.getElementById('card-title')?.textContent || 'Reference Photo';
+            if (img) openLightbox(img.src, title);
         });
     }
 
-    // Grid items click in Reference Drawer -> Open Lightbox
-    const drawerGridItems = document.querySelectorAll('.ref-grid-item');
-    drawerGridItems.forEach(item => {
+    // Connect Drawer Gallery Items to Lightbox
+    document.querySelectorAll('.ref-grid-item').forEach(item => {
         item.addEventListener('click', () => {
             const src = item.dataset.src || item.querySelector('img')?.src;
             const title = item.dataset.title || item.querySelector('strong')?.textContent;
@@ -256,62 +246,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* ── 13. Minimize / Toggle Inspection Card ── */
-    const btnMinimizeCard = document.getElementById('btn-minimize-card');
-    if (btnMinimizeCard && inspectionCard) {
-        btnMinimizeCard.addEventListener('click', () => {
-            inspectionCard.classList.toggle('minimized');
-            btnMinimizeCard.querySelector('.minimize-icon').textContent = 
-                inspectionCard.classList.contains('minimized') ? '👁️' : '✕';
-        });
-    }
-
-    /* ── 14. Keyboard Shortcuts ── */
-    window.addEventListener('keydown', (e) => {
-        // Prevent hotkeys when typing in any input
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-        switch (e.code) {
-            case 'Space':
-            case 'KeyO':
-                e.preventDefault();
-                toggleFreeOrbit();
-                break;
-            case 'KeyW':
-                e.preventDefault();
-                btnToggleWireframe?.click();
-                break;
-            case 'KeyL':
-                e.preventDefault();
-                btnCycleLighting?.click();
-                break;
-            case 'KeyE':
-                e.preventDefault();
-                btnToggleExploded?.click();
-                break;
-            case 'KeyG':
-                e.preventDefault();
-                btnExportGLB?.click();
-                break;
-            case 'KeyR':
-                e.preventDefault();
-                scrollController.jumpToPhase(0);
-                showToast('🔄 Camera Reset to Front Elevation');
-                break;
-            case 'Escape':
-                closeLightbox();
-                if (refDrawer && refDrawer.classList.contains('open')) {
-                    btnCloseRefs?.click();
-                }
-                break;
-        }
-    });
-
-    /* ── 15. Custom Pearl & Champagne Cursor ── */
+    /* ── 14. Custom Cursor ── */
     const cursorDot = document.querySelector('.cursor-dot');
     const cursorRing = document.querySelector('.cursor-ring');
 
-    if (cursorDot && cursorRing && window.innerWidth > 768) {
+    if (cursorDot && cursorRing && window.innerWidth > 860) {
         let mouseX = window.innerWidth / 2;
         let mouseY = window.innerHeight / 2;
         let ringX = mouseX;
@@ -325,25 +264,73 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         function renderCursor() {
-            ringX += (mouseX - ringX) * 0.18;
-            ringY += (mouseY - ringY) * 0.18;
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
             cursorRing.style.left = `${ringX}px`;
             cursorRing.style.top = `${ringY}px`;
             requestAnimationFrame(renderCursor);
         }
         renderCursor();
 
-        // Enlarge ring on interactive elements
-        const interactiveElements = document.querySelectorAll('button, input, a, .card-reference-thumb, .ref-grid-item');
-        interactiveElements.forEach(el => {
+        // Enlarge on hoverable elements
+        const hoverables = 'button, input, a, .card-reference-thumb, .ref-grid-item';
+        document.querySelectorAll(hoverables).forEach(el => {
             el.addEventListener('mouseenter', () => {
-                cursorRing.style.transform = 'translate(-50%, -50%) scale(1.6)';
-                cursorRing.style.borderColor = 'var(--champagne)';
+                cursorRing.style.width = '48px';
+                cursorRing.style.height = '48px';
+                cursorRing.style.borderColor = 'rgba(212, 169, 106, 0.85)';
             });
             el.addEventListener('mouseleave', () => {
-                cursorRing.style.transform = 'translate(-50%, -50%) scale(1.0)';
+                cursorRing.style.width = '32px';
+                cursorRing.style.height = '32px';
                 cursorRing.style.borderColor = 'rgba(212, 169, 106, 0.45)';
             });
         });
     }
+
+    /* ── 15. Keyboard Shortcuts for Power Users ── */
+    window.addEventListener('keydown', (e) => {
+        // Ignore if user is typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        switch (e.key.toLowerCase()) {
+            case ' ':
+            case 'o':
+                e.preventDefault();
+                toggleOrbitMode();
+                break;
+            case 'e':
+                toggleExploded();
+                break;
+            case 'w':
+                toggleWireframe();
+                break;
+            case 'l':
+                cycleLighting();
+                break;
+            case 'r':
+                toggleAutoRotate();
+                break;
+            case 'm':
+                setMode(villaModel.activeMode === 'villa' ? 'resort' : 'villa');
+                break;
+            case 'escape':
+                closeLightbox();
+                if (referenceDrawer) referenceDrawer.classList.remove('open');
+                break;
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+                const phaseNum = parseInt(e.key, 10) - 1;
+                scrollController.jumpToPhase(phaseNum);
+                break;
+        }
+    });
+
+    console.log('%c AER — Dedicated 3D Model Explorer Loaded ', 'background: #182822; color: #D4A96A; font-weight: bold; padding: 6px 12px; border-radius: 4px;');
 });
