@@ -6,29 +6,29 @@
 
 ---
 
-## ✨ Dedicated 3D Engine Features
+## ✨ Dedicated 3D Architectural Engine Features
 
-1. **100% Full-Screen 3D WebGL Canvas** — No generic website clutter, marketing sections, or enquiry forms. Pure architectural 3D viewer.
-2. **Scroll-Driven 360° Continuous Rotation** — Scrolling down smoothly rotates the villa through all 8 elevations and interior rooms.
-3. **Exploded Architectural Cutaway** — Lifts the standing-seam zinc roof (+4.2m) and upper mezzanine floor (+1.8m) to reveal the complete interior dual-level core.
-4. **Free 3D Orbit & Inspection Mode** — Toggle OrbitControls (`Space` or `O`) to freely drag, rotate at any angle, pinch/scroll zoom into fine details, or right-click pan.
-5. **Architectural Inspection Cards** — Automatically updates as you rotate, displaying room titles, architectural specifications, material tags, and real Telegram reference photo thumbnails.
-6. **Procedural PBR Textures (Telegram References)**:
-   - 🪵 **Fluted Dark Oak**: Acoustic wall slats with recessed warm 2700K LED cove lighting.
-   - 🏛️ **Calacatta Gold Marble**: Italian veined marble in the wellness spa washroom.
-   - 🪵 **Eurostairs Floating Steps**: Solid dark oak treads with under-step LED channels and frameless glass balustrade.
-   - 🌿 **Living Moss Wall**: Vertical preserved organic botanical green wall.
-   - 🛁 **Matte-Black Soaking Tub**: Freestanding oval soaking bath with brushed champagne brass tapware.
-   - 🛋️ **Sunken Living Lounge**: Step-down conversation pit with indoor Japanese courtyard tree lightwell.
-   - 🏊 **Private Teak Deck & Infinity Pool**: Weathered teak solarium with cyan rippling plunge pool and twin black loungers.
-7. **2.5 Acre Master Site Plan 3D Mode** — Switch to view all 15 zones (10 luxury cottages, 1,800 sqft pool, banquet hall, treehouse, mud huts, campfire pit, gate, fountain).
-8. **Wireframe CAD Mesh Mode (`W`)** — Inspect polygon topology and geometry like in Blender / Rhino / 3ds Max.
-9. **Dynamic Lighting Modes (`L`)**:
-   - 🌅 **Golden Hour Sunset**: Warm 2700K amber lighting with soft coastal sun shadows.
-   - 🌙 **Luxury Night**: Dramatic twilight with glowing warm LED cove backlighting and cyan pool water.
-   - ☀️ **Studio Day**: Clean daylight architectural rendering.
-10. **Native 3D Model Exporter (`G` or Export button)** — One-click download of the complete 3D model as `AER_Balasore_Luxury_Villa_Cottage.glb` directly into your browser for Blender, 3ds Max, or CAD software!
-11. **Telegram References Drawer** — Inspect the original photos and multi-level architectural walkthrough video side-by-side with the 3D model.
+1. **Two Primary Interactive 3D Modes**:
+   - **🏡 LUXURY VILLA 3D (225 sqft Cottage)**: Detailed photorealistic luxury cottage with coherent architectural design: 3D standing seam zinc roof, exposed timber rafters, slender steel columns, 2.4m teak pivot entrance door, frameless glass sliders, Eurostairs cantilevered floating oak stairs, designer kitchenette & bar with Calacatta Gold waterfall countertop and induction hob, sunken living lounge with biophilic lightwell courtyard tree and OLED display, master bedroom suite with acoustic fluted oak cove lighting, and Italian Calacatta spa bath with freestanding soaking tub and preserved moss wall.
+   - **🗺️ MASTER SITE PLAN 3D (2.5 Acres, Ashushri Creations)**: Complete 3D visualization with actual 3D terrain grading, asphalt entry boulevard with granite curbs, central turning circle around a 3-tiered fountain, 6 guest parking stalls, flagstone pedestrian promenade with curbs, contoured Bermuda lawns, perimeter privacy landscape berms, raised planting beds with shrubs, 10 private luxury cottages with plunge pools, 1,800 sqft lagoon pool with sun loungers and cabana umbrellas, 2,000 sqft double-height Grand Banquet Hall, kitchen & restaurant dining pergola, elevated eco treehouse on 4.5m timber stilts, and 4 authentic thatched mud huts.
+2. **Species-Specific 3D Vegetation & Natural Wind Animation**:
+   - Multi-tiered coconut palms with ringed trunks, crownshafts, coconut clusters, and drooping pinnate fronds.
+   - Broadleaf banana plants with arching paddle leaves.
+   - Sculptural frangipani trees with cream/yellow blossoms.
+   - Manicured boxwood hedges and flowering hibiscus shrubs.
+   - Harmonic wind sway simulation continuously rustling foliage in the coastal breeze.
+3. **Physically Accurate Water Simulation & PBR Shading**:
+   - Dynamic multi-frequency normal map animation with crystal clear physical transmission, IOR 1.333, and cyan underwater gradient.
+   - Realistic recessed hollow plunge pools and central lagoon pool with underwater mosaic tiling and glowing LED fixtures.
+4. **Architectural Inspection System**:
+   - Left Navigation Dock with direct room/viewpoint jumping for the Villa mode and facility inspection for the Master Resort mode.
+   - Live architectural inspection cards with dimensions, volumetric clearances, finishes, and water specifications.
+   - Continuous Cutaway Roof Lift slider (0% to 100%) revealing the dual-level interior volume.
+5. **Interactive CAD & Lighting Suite**:
+   - Free 3D Orbit, Zoom & Pan via OrbitControls.
+   - Dynamic lighting cycle (`L`): Golden Hour Sunset, Luxury Night with Cove LEDs, and Studio Daylight.
+   - Wireframe CAD Mesh toggle (`W`) for topology inspection.
+   - Native binary .GLB exporter (`G`) for 3D export to Blender, Rhino, or 3ds Max.
 
 ---
 
@@ -36,16 +36,14 @@
 
 | Shortcut | Action |
 |---|---|
-| `Space` or `O` | Toggle between **Scroll Tour** and **Free 3D Orbit** |
-| `E` | Toggle **Exploded Cutaway View** (Lifts Roof & Floors) |
-| `W` | Toggle **Wireframe CAD Mesh** |
-| `L` | Cycle **Lighting Mode** (Golden Sunset ➔ Night LEDs ➔ Studio Day) |
-| `A` | Toggle **Auto-Rotate 360°** |
-| `G` | **Export 3D Model (.GLB)** for Blender & 3D software |
-| `R` | **Reset Camera** to Front Elevation (0°) |
 | `M` | Switch between **Luxury Villa 3D** & **Master Site Plan 3D** |
-| `1` – `8` | Direct jump to **Room / Side 1 to 8** |
-| `Esc` | Close Drawer or Lightbox Modal |
+| `E` | Toggle **Exploded Cutaway View** (Lifts Roof & Mezzanine) |
+| `W` | Toggle **Wireframe CAD Mesh** |
+| `L` | Cycle **Lighting Atmosphere** (Golden Sunset ➔ Luxury Night ➔ Studio Day) |
+| `A` | Toggle **Auto-Rotate 360°** |
+| `R` | **Reset Camera** to Default Architectural View |
+| `G` | **Export 3D Model (.GLB)** for Blender / 3ds Max |
+| `1` – `8` | Direct jump to **Villa Viewpoint 1 to 8** |
 
 ---
 

@@ -66,7 +66,7 @@ class VillaModel {
 
         // State Flags
         this.activeMode = 'villa'; // 'villa' | 'resort'
-        this.isFreeOrbit = false;
+        this.isFreeOrbit = true;
         this.isWireframe = false;
         this.lightingMode = 'golden'; // 'golden' | 'night' | 'studio'
         this.autoRotate = false;
@@ -84,6 +84,7 @@ class VillaModel {
         // Lights & Effects
         this.lightObjects = {};
         this.ambientParticles = [];
+        this.windAnimatedObjects = [];
         this.poolWaterMesh = null;
         this.resortPoolWaterMesh = null;
         this.oceanWaterMesh = null;
@@ -136,7 +137,7 @@ class VillaModel {
             this.controls.minDistance = 2.0;
             this.controls.maxDistance = 80;
             this.controls.target.set(0, 1.8, 0);
-            this.controls.enabled = false;
+            this.controls.enabled = true;
         }
 
         // 5. Generate Procedural PBR Textures (Albedo, Normal & Roughness Maps)
@@ -735,6 +736,76 @@ class VillaModel {
                 transparent: true,
                 opacity: 0.55,
                 side: THREE.DoubleSide
+            }),
+            waterLed: new THREE.MeshBasicMaterial({
+                color: 0x00E5FF,
+                transparent: true,
+                opacity: 0.55
+            }),
+            asphaltRoad: new THREE.MeshStandardMaterial({
+                color: 0x25292D,
+                roughness: 0.90,
+                metalness: 0.05
+            }),
+            curbStone: new THREE.MeshStandardMaterial({
+                color: 0x888D92,
+                roughness: 0.75,
+                metalness: 0.04
+            }),
+            promenadePaving: new THREE.MeshStandardMaterial({
+                map: this.textures.stackedStone,
+                roughness: 0.70,
+                metalness: 0.06
+            }),
+            steppingStone: new THREE.MeshStandardMaterial({
+                color: 0x9BA2A6,
+                roughness: 0.85,
+                metalness: 0.02
+            }),
+            manicuredLawn: new THREE.MeshStandardMaterial({
+                color: 0x2A6335,
+                roughness: 0.86,
+                metalness: 0.0
+            }),
+            mulchSoil: new THREE.MeshStandardMaterial({
+                color: 0x22170F,
+                roughness: 0.98,
+                metalness: 0.0
+            }),
+            thatchRoof: new THREE.MeshStandardMaterial({
+                color: 0x7E684C,
+                roughness: 0.94,
+                metalness: 0.02
+            }),
+            tropicalLeaf: new THREE.MeshStandardMaterial({
+                color: 0x1E5928,
+                roughness: 0.42,
+                metalness: 0.04,
+                side: THREE.DoubleSide
+            }),
+            brightFlowerRed: new THREE.MeshStandardMaterial({
+                color: 0xDD2C2C,
+                roughness: 0.60,
+                metalness: 0.02
+            }),
+            brightFlowerYellow: new THREE.MeshStandardMaterial({
+                color: 0xF7B500,
+                roughness: 0.60,
+                metalness: 0.02
+            }),
+            smokedGlass: new THREE.MeshPhysicalMaterial({
+                color: 0x22252A,
+                transparent: true,
+                opacity: 0.55,
+                roughness: 0.08,
+                metalness: 0.12,
+                transmission: 0.65,
+                ior: 1.52
+            }),
+            brushedBrass: new THREE.MeshStandardMaterial({
+                color: 0xCF9E52,
+                roughness: 0.28,
+                metalness: 0.85
             })
         };
     }
@@ -927,6 +998,112 @@ class VillaModel {
         const coffeeBase = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.08, 0.65), mat.champagneMetal);
         coffeeBase.position.set(-1.8, 0.04, -0.6);
         groundGroup.add(coffeeTable, coffeeBase);
+
+        // Living Room Wall-Mounted Ultra-Slim OLED Display with Fluted Wood Panel
+        const tvBackdrop = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.3, 0.04), mat.flutedWood);
+        tvBackdrop.position.set(-2.0, 1.85, -4.34);
+        const tvScreen = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1.05, 0.02), mat.matteBlack);
+        tvScreen.position.set(-2.0, 1.85, -4.31);
+        const tvGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.76, 1.01), new THREE.MeshBasicMaterial({ color: 0x0A0D10 }));
+        tvGlass.position.set(-2.0, 1.85, -4.29);
+        groundGroup.add(tvBackdrop, tvScreen, tvGlass);
+
+        // ── DESIGNER KITCHENETTE & BAR (Defect 5 Room-by-Room Development) ──
+        const kitchenGroup = new THREE.Group();
+        kitchenGroup.position.set(1.7, 0, -1.2);
+
+        // Fluted dark oak base cabinetry
+        const kBase = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.88, 2.3), mat.flutedWood);
+        kBase.position.set(0, 0.44, 0);
+        kBase.castShadow = true;
+        kitchenGroup.add(kBase);
+
+        // Bookmatched Calacatta Gold Marble Waterfall Countertop
+        const kCounterTop = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.06, 2.36), mat.marble);
+        kCounterTop.position.set(0, 0.91, 0);
+        kCounterTop.receiveShadow = true;
+        const kWaterfall = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.94, 0.06), mat.marble);
+        kWaterfall.position.set(0, 0.47, 1.18);
+        kitchenGroup.add(kCounterTop, kWaterfall);
+
+        // Undermount Black Granite Sink & Brushed Brass Gooseneck Faucet
+        const kSink = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.20, 0.48), mat.darkBasalt);
+        kSink.position.set(-0.02, 0.82, 0.35);
+        const faucetPost = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.28, 12), mat.brushedBrass);
+        faucetPost.position.set(0.12, 1.06, 0.35);
+        const faucetNeck = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 8, 16, Math.PI), mat.brushedBrass);
+        faucetNeck.rotation.z = Math.PI / 2;
+        faucetNeck.position.set(0.06, 1.20, 0.35);
+        kitchenGroup.add(kSink, faucetPost, faucetNeck);
+
+        // Built-in Black Ceramic Induction Cooktop with Glowing Simmer Rings
+        const kCooktop = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.015, 0.55), mat.matteBlack);
+        kCooktop.position.set(-0.02, 0.945, -0.55);
+        const ring1 = new THREE.Mesh(new THREE.RingGeometry(0.06, 0.08, 20), mat.warmLed);
+        ring1.rotation.x = -Math.PI / 2;
+        ring1.position.set(-0.02, 0.955, -0.42);
+        const ring2 = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.10, 20), mat.warmLed);
+        ring2.rotation.x = -Math.PI / 2;
+        ring2.position.set(-0.02, 0.955, -0.68);
+        kitchenGroup.add(kCooktop, ring1, ring2);
+
+        // Built-in Wine Cooler / Beverage Chiller with Smoked Glass Door
+        const wineCooler = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.82, 0.65), mat.smokedGlass);
+        wineCooler.position.set(-0.33, 0.44, -0.55);
+        const wineHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.5, 8), mat.brushedBrass);
+        wineHandle.position.set(-0.36, 0.44, -0.80);
+        kitchenGroup.add(wineCooler, wineHandle);
+
+        // Floating Dark Oak Open Shelving with 2700K Linear LED Underglow
+        const kShelf = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.04, 2.1), mat.teak);
+        kShelf.position.set(0.18, 1.78, 0);
+        const kShelfLed = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.02, 2.05), mat.warmLed);
+        kShelfLed.position.set(0.12, 1.75, 0);
+        kitchenGroup.add(kShelf, kShelfLed);
+
+        // Glassware & Accessories on Shelf
+        [-0.6, -0.3, 0.1, 0.4, 0.7].forEach(gz => {
+            const glassCup = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.025, 0.10, 12), mat.glass);
+            glassCup.position.set(0.18, 1.85, gz);
+            kitchenGroup.add(glassCup);
+        });
+
+        // Twin Modern Bar Stools with Leather Seats & Brass Frames
+        [-0.45, 0.45].forEach(sz => {
+            const stool = new THREE.Group();
+            const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.06, 20), mat.darkFabric);
+            seat.position.y = 0.65;
+            const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.62, 12), mat.brushedBrass);
+            stem.position.y = 0.31;
+            const footRing = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.01, 8, 16), mat.brushedBrass);
+            footRing.rotation.x = Math.PI / 2;
+            footRing.position.y = 0.22;
+            const bBase = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.20, 0.03, 20), mat.brushedBrass);
+            bBase.position.y = 0.015;
+            stool.add(seat, stem, footRing, bBase);
+            stool.position.set(-0.62, 0, sz);
+            kitchenGroup.add(stool);
+        });
+
+        groundGroup.add(kitchenGroup);
+
+        // Architectural Pivot Entrance Door & Slender Charcoal Steel Columns
+        const pivotDoor = new THREE.Mesh(new THREE.BoxGeometry(1.15, 2.65, 0.07), mat.teak);
+        pivotDoor.position.set(-0.25, 1.35, 2.48);
+        const doorPull = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.6, 12), mat.matteBlack);
+        doorPull.position.set(-0.75, 1.35, 2.54);
+        groundGroup.add(pivotDoor, doorPull);
+
+        // Slender Architectural Perimeter Columns
+        [
+            { x: -5.0, z: 2.45 },
+            { x:  2.1, z: 2.45 }
+        ].forEach(col => {
+            const steelCol = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 2.75, 16), mat.charcoalMetal);
+            steelCol.position.set(col.x, 1.4, col.z);
+            steelCol.castShadow = true;
+            groundGroup.add(steelCol);
+        });
 
         // Biophilic Courtyard Garden & Natural Japanese Ficus Tree
         const planterCurb = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.1, 0.12, 24), mat.darkBasalt);
@@ -1166,6 +1343,29 @@ class VillaModel {
         fasciaSide.position.set(4.6, 0, 0);
         roofGroup.add(fasciaFront, fasciaSide);
 
+        // 3D Architectural Standing Seams (raised metal ribs along slope every 0.6m)
+        for (let rx = -4.2; rx <= 4.2; rx += 0.6) {
+            const seam = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.07, 10.8), mat.zincRoof);
+            seam.position.set(rx, 0.16, 0);
+            seam.rotation.z = -0.04;
+            seam.castShadow = true;
+            roofGroup.add(seam);
+        }
+
+        // Structural Timber Rafters / Purlins under Soffit
+        for (let pz = -4.8; pz <= 4.8; pz += 1.2) {
+            const rafter = new THREE.Mesh(new THREE.BoxGeometry(9.0, 0.08, 0.07), mat.teak);
+            rafter.position.set(0, -0.21, pz);
+            roofGroup.add(rafter);
+        }
+
+        // Architectural Rainwater Gutter & Vertical Downspout
+        const gutter = new THREE.Mesh(new THREE.BoxGeometry(9.3, 0.08, 0.12), mat.charcoalMetal);
+        gutter.position.set(0, -0.12, 5.42);
+        const downspout = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 5.8, 12), mat.charcoalMetal);
+        downspout.position.set(4.55, -2.8, 5.35);
+        roofGroup.add(gutter, downspout);
+
         const skylightFrame = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.08, 3.3), mat.charcoalMetal);
         skylightFrame.position.set(0.6, 0.16, -1.0);
         const skylightGlass = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.04, 3.1), mat.glass);
@@ -1185,7 +1385,7 @@ class VillaModel {
         const mat = this.getMaterials();
         this.resortGroup = new THREE.Group();
 
-        // 10 Detailed Luxury Cottages (Arranged per Ashushri Creations plan)
+        // ── 1. 10 Detailed Luxury Cottages (Arranged per Ashushri Creations plan) ──
         const cottageCoords = [
             { x: -16, z: -8, ry: 0 },
             { x: -13, z: -8, ry: 0 },
@@ -1206,40 +1406,111 @@ class VillaModel {
             this.resortGroup.add(cottage);
         });
 
-        // Grand Banquet Hall (Legend 3 - 2,000 sqft)
+        // ── 2. Grand Banquet Hall (Legend 3 — 2,000 sqft Architectural Pavilion) ──
         const banquet = new THREE.Group();
-        const bPlinth = new THREE.Mesh(new THREE.BoxGeometry(9.4, 0.3, 7.8), mat.darkBasalt);
-        bPlinth.position.y = 0.15;
+        // Basalt podium plinth with wide entrance steps
+        const bPlinth = new THREE.Mesh(new THREE.BoxGeometry(10.2, 0.35, 8.4), mat.darkBasalt);
+        bPlinth.position.y = 0.175;
         bPlinth.receiveShadow = true;
-        const banquetBase = new THREE.Mesh(new THREE.BoxGeometry(8.8, 3.0, 7.2), mat.pearlWall);
-        banquetBase.position.y = 1.65;
+        for (let s = 0; s < 3; s++) {
+            const bStep = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.12, 0.4), mat.darkBasalt);
+            bStep.position.set(0, 0.06 + s * 0.10, 4.3 + s * 0.35);
+            banquet.add(bStep);
+        }
+
+        // Pavilion enclosed core
+        const banquetBase = new THREE.Mesh(new THREE.BoxGeometry(9.4, 3.2, 7.6), mat.pearlWall);
+        banquetBase.position.y = 1.75;
         banquetBase.castShadow = true;
-        const col1 = new THREE.Mesh(new THREE.BoxGeometry(0.75, 3.0, 0.75), mat.stackedStone);
-        col1.position.set(-4.1, 1.65, 3.3);
-        const col2 = new THREE.Mesh(new THREE.BoxGeometry(0.75, 3.0, 0.75), mat.stackedStone);
-        col2.position.set(4.1, 1.65, 3.3);
-        const bGlass = new THREE.Mesh(new THREE.BoxGeometry(5.4, 2.4, 0.06), mat.glass);
-        bGlass.position.set(0, 1.5, 3.63);
-        const bFascia = new THREE.Mesh(new THREE.BoxGeometry(9.6, 0.15, 8.0), mat.teak);
-        bFascia.position.y = 3.2;
+
+        // Monumental stacked stone entrance columns
+        [-4.3, -1.5, 1.5, 4.3].forEach(cx => {
+            const col = new THREE.Mesh(new THREE.BoxGeometry(0.72, 3.3, 0.72), mat.stackedStone);
+            col.position.set(cx, 1.8, 3.6);
+            col.castShadow = true;
+            banquet.add(col);
+        });
+
+        // Double-height curtain wall glazing with charcoal mullions
+        const bGlass = new THREE.Mesh(new THREE.BoxGeometry(8.2, 2.6, 0.08), mat.glass);
+        bGlass.position.set(0, 1.65, 3.82);
+        const bMullionH = new THREE.Mesh(new THREE.BoxGeometry(8.25, 0.06, 0.12), mat.charcoalMetal);
+        bMullionH.position.set(0, 2.95, 3.82);
+        banquet.add(bGlass, bMullionH);
+
+        // Deep cantilevered timber fascia & structural roof rafters
+        const bFascia = new THREE.Mesh(new THREE.BoxGeometry(10.6, 0.18, 8.8), mat.teak);
+        bFascia.position.y = 3.4;
         bFascia.castShadow = true;
-        const bRoof = new THREE.Mesh(new THREE.ConeGeometry(6.6, 2.2, 4), mat.zincRoof);
+
+        // Exposed structural timber roof trusses
+        for (let tx = -4.5; tx <= 4.5; tx += 1.8) {
+            const truss = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.16, 8.4), mat.teak);
+            truss.position.set(tx, 3.28, 0);
+            banquet.add(truss);
+        }
+
+        // Standing-seam zinc roof canopy
+        const bRoof = new THREE.Mesh(new THREE.ConeGeometry(7.2, 2.4, 4), mat.zincRoof);
         bRoof.rotation.y = Math.PI / 4;
-        bRoof.position.y = 4.3;
+        bRoof.position.y = 4.6;
         bRoof.castShadow = true;
-        banquet.add(bPlinth, banquetBase, col1, col2, bGlass, bFascia, bRoof);
+
+        // Outdoor event cocktail terrace
+        for (let c = 0; c < 3; c++) {
+            const table = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 16), mat.charcoalMetal);
+            table.position.set(-2.0 + c * 2.0, 0.45, 5.8);
+            banquet.add(table);
+        }
+
+        banquet.add(bPlinth, banquetBase, bFascia, bRoof);
         banquet.position.set(5.5, 0, -8.0);
         this.resortGroup.add(banquet);
 
-        // Kitchen & Dining (Legend 2 - 525 sqft)
-        const kitchen = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.5, 3.2), mat.pearlWall);
-        kitchen.position.set(-18, 1.25, 7.5);
-        const kRoof = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.45, 3.6), mat.zincRoof);
-        kRoof.position.set(-18, 2.7, 7.5);
-        this.resortGroup.add(kitchen, kRoof);
+        // ── 3. Kitchen & Dining Pavilion (Legend 2 — 525 sqft Restaurant) ──
+        const kitchenGroup = new THREE.Group();
+        const kPlinth = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.25, 3.8), mat.darkBasalt);
+        kPlinth.position.y = 0.125;
+        const kitchen = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.6, 3.4), mat.pearlWall);
+        kitchen.position.y = 1.42;
+        kitchen.castShadow = true;
+        const kRoof = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.35, 3.9), mat.zincRoof);
+        kRoof.position.y = 2.85;
+        kRoof.castShadow = true;
 
-        // Main Resort Swimming Pool (Legend 8 - 1,800 sqft Lagoon Pool)
+        // Covered dining pergola with timber rafters
+        const pergola = new THREE.Group();
+        for (let col = 0; col < 4; col++) {
+            const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 2.4, 0.14), mat.teak);
+            post.position.set(-1.8 + (col % 2) * 3.6, 1.2, 2.2 + Math.floor(col / 2) * 2.2);
+            pergola.add(post);
+        }
+        for (let r = 0; r < 5; r++) {
+            const beam = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.10, 0.08), mat.teak);
+            beam.position.set(0, 2.45, 2.2 + r * 0.55);
+            pergola.add(beam);
+        }
+        // Dining tables under pergola
+        [-1.0, 1.0].forEach(tx => {
+            const dTable = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.75, 0.8), mat.teak);
+            dTable.position.set(tx, 0.38, 3.2);
+            pergola.add(dTable);
+        });
+
+        kitchenGroup.add(kPlinth, kitchen, kRoof, pergola);
+        kitchenGroup.position.set(-18, 0, 7.5);
+        this.resortGroup.add(kitchenGroup);
+
+        // ── 4. Main Resort Swimming Pool (Legend 8 — 1,800 sqft Lagoon Pool) ──
         const poolGroup = new THREE.Group();
+
+        // Multi-tiered wooden sun deck surrounding pool
+        const poolSundeckGeo = new THREE.CylinderGeometry(5.4, 5.6, 0.22, 32);
+        poolSundeckGeo.scale(1.48, 1.0, 0.95);
+        const poolSundeck = new THREE.Mesh(poolSundeckGeo, mat.teak);
+        poolSundeck.position.y = 0.11;
+        poolSundeck.receiveShadow = true;
+
         // Hollow basin wall
         const poolBasinGeo = new THREE.CylinderGeometry(4.2, 4.0, 0.65, 32, 1, true);
         poolBasinGeo.scale(1.45, 1.0, 0.92);
@@ -1253,7 +1524,7 @@ class VillaModel {
         poolFloor.rotation.x = -Math.PI / 2;
         poolFloor.position.y = 0.04;
 
-        // Coping edge ring
+        // Wet-edge dark basalt coping ring
         const copingGeo = new THREE.RingGeometry(3.9, 4.4, 32);
         copingGeo.scale(1.45, 0.92);
         const coping = new THREE.Mesh(copingGeo, mat.darkBasalt);
@@ -1272,11 +1543,43 @@ class VillaModel {
         poolGlow.rotation.x = -Math.PI / 2;
         poolGlow.position.y = 0.06;
 
-        poolGroup.add(poolBasin, poolFloor, coping, this.resortPoolWaterMesh, poolGlow);
+        // Poolside sun loungers & canvas cabana umbrellas
+        [-3.2, 3.2].forEach((lx, idx) => {
+            const lounger = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.16, 1.6), mat.charcoalMetal);
+            lounger.position.set(lx, 0.30, 2.8);
+            const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 1.5), mat.velvetChampagne);
+            cushion.position.set(lx, 0.42, 2.8);
+
+            // Sun Umbrella
+            const umbrellaMast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.4, 12), mat.teak);
+            umbrellaMast.position.set(lx + (idx === 0 ? -0.8 : 0.8), 1.2, 3.2);
+            const umbrellaCanopy = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.45, 12), mat.pearlWall);
+            umbrellaCanopy.position.set(lx + (idx === 0 ? -0.8 : 0.8), 2.3, 3.2);
+
+            poolGroup.add(lounger, cushion, umbrellaMast, umbrellaCanopy);
+        });
+
+        // Poolside Bar Gazebo Pavilion
+        const gazebo = new THREE.Group();
+        for (let g = 0; g < 4; g++) {
+            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 2.2, 12), mat.teak);
+            post.position.set(-0.8 + (g % 2) * 1.6, 1.1, -0.8 + Math.floor(g / 2) * 1.6);
+            gazebo.add(post);
+        }
+        const gazBar = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 0.4), mat.stackedStone);
+        gazBar.position.set(0, 0.45, -0.8);
+        const gazRoof = new THREE.Mesh(new THREE.ConeGeometry(1.6, 0.9, 4), mat.thatchRoof);
+        gazRoof.rotation.y = Math.PI / 4;
+        gazRoof.position.y = 2.5;
+        gazebo.add(gazBar, gazRoof);
+        gazebo.position.set(5.5, 0, -1.8);
+        poolGroup.add(gazebo);
+
+        poolGroup.add(poolSundeck, poolBasin, poolFloor, coping, this.resortPoolWaterMesh, poolGlow);
         poolGroup.position.set(-11, 0, -2.5);
         this.resortGroup.add(poolGroup);
 
-        // Central Vehicular Turning Plaza & 3-Tiered Water Fountain (Legend 15)
+        // ── 5. Central Vehicular Turning Plaza & 3-Tiered Water Fountain (Legend 15) ──
         const fountain = new THREE.Group();
         // Hollow basin wall
         const fBasin = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.5, 0.5, 28, 1, true), mat.darkBasalt);
@@ -1300,7 +1603,7 @@ class VillaModel {
         fountain.position.set(13.5, 0, 2.0);
         this.resortGroup.add(fountain);
 
-        // Campfire Gathering Pit & Open Lounge (Legend 7)
+        // ── 6. Campfire Gathering Pit & Sunken Lounge (Legend 7) ──
         const campFire = new THREE.Group();
         const firePit = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.5, 0.45, 20), mat.darkBasalt);
         firePit.position.y = 0.22;
@@ -1313,37 +1616,83 @@ class VillaModel {
         campFire.position.set(-8.5, 0, 7.5);
         this.resortGroup.add(campFire);
 
-        // Eco Tree House (Legend 12)
+        // ── 7. Eco Tree House (Legend 12) ──
         const treehouse = new THREE.Group();
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.55, 5.2, 10), mat.teak);
-        trunk.position.y = 2.6;
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.9, 2.3), mat.flutedWood);
-        cabin.position.y = 4.3;
-        const thRoof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.5, 4), mat.zincRoof);
+        // 4 Sturdy timber stilt posts with diagonal bracing
+        for (let p = 0; p < 4; p++) {
+            const stilt = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 4.8, 10), mat.teak);
+            stilt.position.set(-0.9 + (p % 2) * 1.8, 2.4, -0.9 + Math.floor(p / 2) * 1.8);
+            treehouse.add(stilt);
+        }
+        // Elevated viewing deck & safety railings
+        const thDeck = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.15, 2.8), mat.teak);
+        thDeck.position.y = 4.8;
+        const thRail = new THREE.Mesh(new THREE.BoxGeometry(2.85, 0.85, 2.85), mat.teak);
+        thRail.position.y = 5.25;
+        // Rustic timber cabin
+        const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.9, 2.2), mat.flutedWood);
+        cabin.position.y = 5.8;
+        const thRoof = new THREE.Mesh(new THREE.ConeGeometry(1.9, 1.5, 4), mat.thatchRoof);
         thRoof.rotation.y = Math.PI / 4;
-        thRoof.position.y = 6.0;
-        treehouse.add(trunk, cabin, thRoof);
+        thRoof.position.y = 7.3;
+        // Access wooden staircase
+        for (let s = 0; s < 12; s++) {
+            const tread = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.06, 0.25), mat.teak);
+            tread.position.set(-1.6, s * 0.40 + 0.1, -1.2 + s * 0.28);
+            treehouse.add(tread);
+        }
+
+        treehouse.add(thDeck, cabin, thRoof);
         treehouse.position.set(2.5, 0, 7.5);
         this.resortGroup.add(treehouse);
 
-        // Mud Huts (Legend 14 - 4 Units)
+        // ── 8. Mud Huts (Legend 14 — 4 Units with Thatched Roofs) ──
         for (let m = 0; m < 4; m++) {
+            const hutGroup = new THREE.Group();
             const mudHut = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 1.7, 20), mat.pearlWall);
-            mudHut.position.set(9.0 + m * 2.3, 0.85, 6.5 + m * 0.4);
-            const hutRoof = new THREE.Mesh(new THREE.ConeGeometry(1.65, 1.3, 20), mat.teak);
-            hutRoof.position.set(9.0 + m * 2.3, 2.3, 6.5 + m * 0.4);
-            this.resortGroup.add(mudHut, hutRoof);
+            mudHut.position.y = 0.85;
+            mudHut.castShadow = true;
+            const hutDoor = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.2, 0.08), mat.teak);
+            hutDoor.position.set(0, 0.6, 1.34);
+            const hutRoof = new THREE.Mesh(new THREE.ConeGeometry(1.75, 1.4, 20), mat.thatchRoof);
+            hutRoof.position.y = 2.35;
+            hutRoof.castShadow = true;
+            hutGroup.add(mudHut, hutDoor, hutRoof);
+            hutGroup.position.set(9.0 + m * 2.3, 0, 6.5 + m * 0.4);
+            this.resortGroup.add(hutGroup);
         }
 
-        // Grand Entrance Gate (Legend 10)
+        // ── 9. Grand Entrance Gate, Security Kiosk & Resort Monument (Legend 10) ──
         const gateGroup = new THREE.Group();
-        const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.85, 3.6, 0.85), mat.stackedStone);
-        pillarL.position.set(0, 1.8, -2.6);
-        const pillarR = new THREE.Mesh(new THREE.BoxGeometry(0.85, 3.6, 0.85), mat.stackedStone);
-        pillarR.position.set(0, 1.8, 2.6);
-        const beam = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.65, 6.2), mat.teak);
-        beam.position.set(0, 3.7, 0);
-        gateGroup.add(pillarL, pillarR, beam);
+        // Dual monumental stacked stone pillars
+        const pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.95, 4.0, 0.95), mat.stackedStone);
+        pillarL.position.set(0, 2.0, -2.8);
+        const pillarR = new THREE.Mesh(new THREE.BoxGeometry(0.95, 4.0, 0.95), mat.stackedStone);
+        pillarR.position.set(0, 2.0, 2.8);
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.65, 6.8), mat.teak);
+        beam.position.set(0, 4.1, 0);
+
+        // Security Guardhouse Kiosk
+        const kiosk = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.6, 1.8), mat.pearlWall);
+        kiosk.position.set(-1.2, 1.3, -4.2);
+        const kioskRoof = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.25, 2.1), mat.zincRoof);
+        kioskRoof.position.set(-1.2, 2.65, -4.2);
+
+        // Resort Monument Wall with Welcome Sign
+        const monumentWall = new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.4, 3.2), mat.stackedStone);
+        monumentWall.position.set(-0.5, 0.7, 4.8);
+        const monumentSign = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.7, 2.6), mat.charcoalMetal);
+        monumentSign.position.set(-0.32, 0.8, 4.8);
+        const monumentLed = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.04, 2.5), mat.warmLed);
+        monumentLed.position.set(-0.28, 1.2, 4.8);
+
+        // Boom barrier
+        const barrierPost = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.9, 12), mat.charcoalMetal);
+        barrierPost.position.set(0, 0.45, 1.9);
+        const barrierArm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.08, 3.8), mat.pearlWall);
+        barrierArm.position.set(0, 0.85, 0);
+
+        gateGroup.add(pillarL, pillarR, beam, kiosk, kioskRoof, monumentWall, monumentSign, monumentLed, barrierPost, barrierArm);
         gateGroup.position.set(24.0, 0, 2.0);
         this.resortGroup.add(gateGroup);
 
@@ -1354,59 +1703,82 @@ class VillaModel {
     createCompactCottage(mat) {
         const c = new THREE.Group();
 
-        // Foundation plinth
-        const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.25, 2.8), mat.darkBasalt);
-        plinth.position.y = 0.12;
+        // 1. Foundation plinth with steps
+        const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.9, 0.28, 2.9), mat.darkBasalt);
+        plinth.position.y = 0.14;
         plinth.receiveShadow = true;
 
-        // Cottage body with fluted timber siding and stone base
-        const base = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.8, 2.4), mat.flutedWood);
-        base.position.y = 1.05;
+        // Entry steps
+        const step = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.14, 0.35), mat.darkBasalt);
+        step.position.set(-0.6, 0.14, 2.5);
+        c.add(step);
+
+        // 2. Weathered teak veranda deck with perimeter reveals
+        const veranda = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.08, 1.2), mat.teak);
+        veranda.position.set(0, 0.32, 1.8);
+        veranda.receiveShadow = true;
+
+        // 3. Cottage body with fluted timber siding and stone shear pilaster
+        const base = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.85, 2.5), mat.flutedWood);
+        base.position.y = 1.18;
         base.castShadow = true;
 
-        // Timber fascia & cantilevered eaves
-        const fascia = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.1, 2.9), mat.teak);
-        fascia.position.y = 1.98;
+        const stonePilaster = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.85, 2.52), mat.stackedStone);
+        stonePilaster.position.set(-1.18, 1.18, 0);
+        stonePilaster.castShadow = true;
+
+        // 4. Floor-to-ceiling glass front & warm interior glow
+        const glassFront = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.45, 0.04), mat.glass);
+        glassFront.position.set(0.15, 1.05, 1.26);
+
+        const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 1.35), mat.warmLed);
+        glow.position.set(0.15, 1.05, 1.22);
+
+        // 5. Timber fascia & cantilevered eaves
+        const fascia = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.12, 3.1), mat.teak);
+        fascia.position.y = 2.14;
         fascia.castShadow = true;
 
-        // Modern standing seam zinc roof
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(2.2, 0.9, 4), mat.zincRoof);
+        // 6. Modern standing seam zinc roof
+        const roof = new THREE.Mesh(new THREE.ConeGeometry(2.35, 1.0, 4), mat.zincRoof);
         roof.rotation.y = Math.PI / 4;
-        roof.position.y = 2.45;
+        roof.position.y = 2.68;
         roof.castShadow = true;
 
-        // Glass front with warm interior glow
-        const glassFront = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.35, 0.04), mat.glass);
-        glassFront.position.set(0, 0.95, 1.22);
+        // 7. Private plunge pool
+        const miniPoolCoping = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.10, 0.95), mat.darkBasalt);
+        miniPoolCoping.position.set(0.7, 0.33, 1.8);
+        const miniPool = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.06, 0.75), mat.poolWater);
+        miniPool.position.set(0.7, 0.35, 1.8);
 
-        // Warm interior glow plane
-        const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.25), mat.warmLed);
-        glow.position.set(0, 0.95, 1.18);
+        // Submerged cyan pool LED glow
+        const miniPoolGlow = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.02, 0.65), mat.waterLed);
+        miniPoolGlow.position.set(0.7, 0.28, 1.8);
 
-        // Private veranda deck & mini plunge pool
-        const veranda = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.06, 1.1), mat.teak);
-        veranda.position.set(0, 0.26, 1.8);
-        const miniPoolCoping = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.08, 0.9), mat.darkBasalt);
-        miniPoolCoping.position.set(0.65, 0.27, 1.8);
-        const miniPool = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.05, 0.7), mat.poolWater);
-        miniPool.position.set(0.65, 0.29, 1.8);
+        // 8. Individual stepping stones connecting to garden path
+        for (let s = 0; s < 3; s++) {
+            const stone = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.28, 0.06, 12), mat.steppingStone);
+            stone.position.set(-0.6, 0.04, 2.9 + s * 0.55);
+            stone.receiveShadow = true;
+            c.add(stone);
+        }
 
-        c.add(plinth, base, fascia, roof, glassFront, glow, veranda, miniPoolCoping, miniPool);
+        c.add(plinth, veranda, base, stonePilaster, glassFront, glow, fascia, roof, miniPoolCoping, miniPool, miniPoolGlow);
         return c;
     }
 
     /* ═══════════════════════════════════════════════════════════════════════════
-       LANDSCAPING & NATURAL TROPICAL VEGETATION
+       LANDSCAPING & NATURAL TROPICAL VEGETATION (3D Terrain, Roads, Lawns, Palms)
        ═══════════════════════════════════════════════════════════════════════════ */
     buildLandscape() {
         const mat = this.getMaterials();
 
-        // Coastal Sand & Earth Terrain
+        // ── 1. Coastal Sand & Earth Foundation ──
         const ground = new THREE.Mesh(
             new THREE.PlaneGeometry(160, 160),
             new THREE.MeshStandardMaterial({
-                color: 0xDAC8AC,
-                roughness: 0.95,
+                color: 0xD6C4A6,
+                roughness: 0.96,
                 metalness: 0.02
             })
         );
@@ -1415,30 +1787,136 @@ class VillaModel {
         ground.receiveShadow = true;
         this.scene.add(ground);
 
-        // Resort Manicured Bermuda Grass Lawn
-        const lawn = new THREE.Mesh(
-            new THREE.PlaneGeometry(28, 18),
-            new THREE.MeshStandardMaterial({
-                color: 0x2E5E35,
-                roughness: 0.88,
-                metalness: 0.0
-            })
+        // Graded 3D Terrain Platform (Engineered Resort Ground Plane)
+        const terrainPlatform = new THREE.Mesh(
+            new THREE.BoxGeometry(66, 0.28, 44),
+            mat.darkBasalt
         );
-        lawn.rotation.x = -Math.PI / 2;
-        lawn.position.set(6.0, 0.01, -0.5);
-        lawn.receiveShadow = true;
-        this.resortGroup.add(lawn);
+        terrainPlatform.position.set(1.0, 0.14, -0.5);
+        terrainPlatform.receiveShadow = true;
+        this.resortGroup.add(terrainPlatform);
 
-        // Natural Flagstone Paved Walkway Path
-        const pathMesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(38, 3.2),
-            mat.stackedStone
-        );
-        pathMesh.rotation.x = -Math.PI / 2;
-        pathMesh.position.set(4.0, 0.02, 1.5);
-        this.resortGroup.add(pathMesh);
+        // ── 2. Contoured Bermuda Grass Lawns ──
+        // Central parkland lawn
+        const lawnCentral = new THREE.Mesh(new THREE.PlaneGeometry(38, 26), mat.manicuredLawn);
+        lawnCentral.rotation.x = -Math.PI / 2;
+        lawnCentral.position.set(2.0, 0.29, 0.0);
+        lawnCentral.receiveShadow = true;
 
-        // Ocean Water
+        // Banquet event lawn
+        const lawnBanquet = new THREE.Mesh(new THREE.PlaneGeometry(24, 18), mat.manicuredLawn);
+        lawnBanquet.rotation.x = -Math.PI / 2;
+        lawnBanquet.position.set(6.0, 0.29, -9.0);
+        lawnBanquet.receiveShadow = true;
+
+        // Cottage village green lawn
+        const lawnCottages = new THREE.Mesh(new THREE.PlaneGeometry(30, 20), mat.manicuredLawn);
+        lawnCottages.rotation.x = -Math.PI / 2;
+        lawnCottages.position.set(-11.0, 0.29, -2.5);
+        lawnCottages.receiveShadow = true;
+
+        this.resortGroup.add(lawnCentral, lawnBanquet, lawnCottages);
+
+        // Perimeter Landscape Berms / Earth Mounds (Topographical Variation)
+        [
+            { x: -16, z: -16, sx: 18, sz: 6 },
+            { x: 10,  z: -16, sx: 20, sz: 6 },
+            { x: -16, z: 12,  sx: 16, sz: 6 },
+            { x: 12,  z: 12,  sx: 18, sz: 6 }
+        ].forEach(b => {
+            const berm = new THREE.Mesh(
+                new THREE.ConeGeometry(b.sx / 2, 1.2, 16),
+                mat.manicuredLawn
+            );
+            berm.scale.set(1.0, 0.8, b.sz / b.sx);
+            berm.position.set(b.x, 0.45, b.z);
+            this.resortGroup.add(berm);
+        });
+
+        // ── 3. Vehicular Roads & Circulation System ──
+        // Main entrance boulevard from Gate to Roundabout
+        const entryRoad = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.06, 4.8), mat.asphaltRoad);
+        entryRoad.position.set(18.5, 0.31, 2.0);
+        entryRoad.receiveShadow = true;
+
+        // Entrance road granite stone curbs
+        const curbN = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.14, 0.22), mat.curbStone);
+        curbN.position.set(18.5, 0.35, -0.45);
+        const curbS = new THREE.Mesh(new THREE.BoxGeometry(11.0, 0.14, 0.22), mat.curbStone);
+        curbS.position.set(18.5, 0.35, 4.45);
+        this.resortGroup.add(entryRoad, curbN, curbS);
+
+        // Circular vehicular roundabout road around fountain
+        const roundabout = new THREE.Mesh(new THREE.RingGeometry(3.0, 5.6, 32), mat.asphaltRoad);
+        roundabout.rotation.x = -Math.PI / 2;
+        roundabout.position.set(13.5, 0.31, 2.0);
+
+        const rCurb = new THREE.Mesh(new THREE.RingGeometry(5.55, 5.85, 32), mat.curbStone);
+        rCurb.rotation.x = -Math.PI / 2;
+        rCurb.position.set(13.5, 0.32, 2.0);
+        this.resortGroup.add(roundabout, rCurb);
+
+        // Guest Parking Bays (6 stalls with white thermoplastic markings)
+        const parkingPad = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.05, 4.2), mat.asphaltRoad);
+        parkingPad.position.set(19.0, 0.31, -3.2);
+        this.resortGroup.add(parkingPad);
+        for (let p = -2.5; p <= 2.5; p += 1.0) {
+            const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 3.8), mat.pearlWall);
+            stripe.position.set(19.0 + p, 0.32, -3.2);
+            this.resortGroup.add(stripe);
+        }
+
+        // ── 4. Pedestrian Promenades & Walkway Paths ──
+        // Primary central pedestrian promenade (width 3.4m)
+        const mainPromenade = new THREE.Mesh(new THREE.PlaneGeometry(32, 3.4), mat.promenadePaving);
+        mainPromenade.rotation.x = -Math.PI / 2;
+        mainPromenade.position.set(0, 0.30, 1.8);
+        mainPromenade.receiveShadow = true;
+
+        // Promenade stone curb borders
+        const promCurbN = new THREE.Mesh(new THREE.BoxGeometry(32, 0.10, 0.18), mat.curbStone);
+        promCurbN.position.set(0, 0.34, 0.05);
+        const promCurbS = new THREE.Mesh(new THREE.BoxGeometry(32, 0.10, 0.18), mat.curbStone);
+        promCurbS.position.set(0, 0.34, 3.55);
+        this.resortGroup.add(mainPromenade, promCurbN, promCurbS);
+
+        // Cottage access garden paths (L-shaped loop)
+        const cottagePathNorth = new THREE.Mesh(new THREE.PlaneGeometry(18, 2.6), mat.promenadePaving);
+        cottagePathNorth.rotation.x = -Math.PI / 2;
+        cottagePathNorth.position.set(-8.5, 0.30, -5.6);
+
+        const cottagePathWest = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 15), mat.promenadePaving);
+        cottagePathWest.rotation.x = -Math.PI / 2;
+        cottagePathWest.position.set(-15.0, 0.30, -0.5);
+
+        this.resortGroup.add(cottagePathNorth, cottagePathWest);
+
+        // Nature trails to campfire, mud huts, and treehouse
+        const trailCampfire = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 7.5), mat.promenadePaving);
+        trailCampfire.rotation.x = -Math.PI / 2;
+        trailCampfire.position.set(-8.5, 0.30, 4.5);
+
+        const trailMudHuts = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 1.8), mat.promenadePaving);
+        trailMudHuts.rotation.x = -Math.PI / 2;
+        trailMudHuts.position.set(11.5, 0.30, 5.2);
+
+        this.resortGroup.add(trailCampfire, trailMudHuts);
+
+        // Raised stone planting beds along main promenade
+        [-10, -3, 4, 11].forEach(px => {
+            const bed = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.28, 1.2), mat.stackedStone);
+            bed.position.set(px, 0.42, 4.3);
+            const soil = new THREE.Mesh(new THREE.BoxGeometry(3.9, 0.10, 0.9), mat.mulchSoil);
+            soil.position.set(px, 0.52, 4.3);
+            this.resortGroup.add(bed, soil);
+
+            // Shrubbery and flowers in planting beds
+            const shrub = this.createTropicalShrub(mat, 0.65);
+            shrub.position.set(px, 0.54, 4.3);
+            this.resortGroup.add(shrub);
+        });
+
+        // ── 5. Coastal Ocean Water ──
         this.oceanWaterMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(180, 70),
             new THREE.MeshPhysicalMaterial({
@@ -1458,7 +1936,7 @@ class VillaModel {
         this.oceanWaterMesh.position.set(0, -0.15, 60);
         this.scene.add(this.oceanWaterMesh);
 
-        // Master Plan Overlay Projection Plane
+        // Master Plan Overlay Projection Plane (Coordinate reference only, kept opacity 0)
         this.planPlaneMesh = new THREE.Mesh(
             new THREE.PlaneGeometry(44, 28),
             new THREE.MeshBasicMaterial({
@@ -1472,23 +1950,36 @@ class VillaModel {
         this.planPlaneMesh.position.set(0, 0.06, 0);
         this.scene.add(this.planPlaneMesh);
 
-        // Realistic Tropical Palm Trees for Single Villa Overview
-        const palmPositions = [
+        // ── 6. Species-Specific Vegetation for Villa Overview ──
+        // Realistic Tropical Palm Trees
+        const villaPalms = [
             { x: -7.5, z: 6.5, scale: 1.15 },
             { x: -8.8, z: -4.8, scale: 1.35 },
             { x: 8.5,  z: 6.2, scale: 1.1 },
             { x: 8.8,  z: -5.5, scale: 1.3 },
             { x: -15,  z: 2.0, scale: 1.25 }
         ];
-
-        palmPositions.forEach(p => {
+        villaPalms.forEach(p => {
             const palm = this.createRealisticPalmTree(mat, p.scale);
             palm.position.set(p.x, 0, p.z);
             this.villaOverviewGroup.add(palm);
         });
 
-        // Master Site Plan scale palms (scaled 0.40 - 0.48) along promenade
-        const resortPalmPositions = [
+        // Broadleaf Banana Plants next to pool terrace
+        [-2.5, 5.8].forEach((bx, idx) => {
+            const banana = this.createBananaPlant(mat, 1.1);
+            banana.position.set(bx, 0.44, 5.6);
+            this.villaOverviewGroup.add(banana);
+        });
+
+        // Sculptural Frangipani Tree
+        const frangipani = this.createFrangipaniTree(mat, 1.2);
+        frangipani.position.set(6.8, 0, 0);
+        this.villaOverviewGroup.add(frangipani);
+
+        // ── 7. Master Site Plan Vegetation (Layered Multi-Species) ──
+        // Coconut palms along promenade and perimeter
+        const resortPalms = [
             { x: -14, z: 3.5, scale: 0.45 },
             { x: -8,  z: 3.5, scale: 0.42 },
             { x: -2,  z: 3.5, scale: 0.46 },
@@ -1497,28 +1988,58 @@ class VillaModel {
             { x: 16,  z: 3.5, scale: 0.42 },
             { x: -5,  z: -5.0, scale: 0.40 },
             { x: 1,   z: -5.0, scale: 0.42 },
-            { x: 12,  z: -3.0, scale: 0.45 }
+            { x: 12,  z: -3.0, scale: 0.45 },
+            { x: -17, z: -12.0, scale: 0.48 },
+            { x: -12, z: -12.0, scale: 0.46 },
+            { x: 8,   z: -14.0, scale: 0.48 },
+            { x: -18, z: 12.0, scale: 0.44 },
+            { x: -6,  z: 11.0, scale: 0.46 },
+            { x: 7,   z: 11.0, scale: 0.44 }
         ];
-        resortPalmPositions.forEach(p => {
+        resortPalms.forEach(p => {
             const palm = this.createRealisticPalmTree(mat, p.scale);
-            palm.position.set(p.x, 0, p.z);
+            palm.position.set(p.x, 0.28, p.z);
             this.resortGroup.add(palm);
+        });
+
+        // Banana plants around lagoon pool and dining
+        [
+            { x: -6.5, z: -2.5, scale: 0.55 },
+            { x: -15.5, z: -1.0, scale: 0.52 },
+            { x: -16.5, z: 5.5, scale: 0.50 }
+        ].forEach(bp => {
+            const banana = this.createBananaPlant(mat, bp.scale);
+            banana.position.set(bp.x, 0.28, bp.z);
+            this.resortGroup.add(banana);
+        });
+
+        // Frangipani trees near entrance gate and banquet hall
+        [
+            { x: 17.5, z: 4.8, scale: 0.55 },
+            { x: 11.5, z: -7.5, scale: 0.58 }
+        ].forEach(fp => {
+            const frang = this.createFrangipaniTree(mat, fp.scale);
+            frang.position.set(fp.x, 0.28, fp.z);
+            this.resortGroup.add(frang);
         });
     }
 
+    /* ═══════════════════════════════════════════════════════════════════════════
+       SPECIES-SPECIFIC 3D TREE ASSETS WITH WIND SWAY ANIMATION
+       ═══════════════════════════════════════════════════════════════════════════ */
     createRealisticPalmTree(mat, scale = 1.0) {
         const palmGroup = new THREE.Group();
         palmGroup.scale.set(scale, scale, scale);
 
         // Curved segmented trunk with fibrous texture rings
         const trunkGroup = new THREE.Group();
-        const segments = 8;
+        const segments = 9;
         let currY = 0;
         let currZ = 0;
         for (let s = 0; s < segments; s++) {
             const segH = 0.65;
-            const topR = 0.18 - s * 0.01;
-            const botR = 0.20 - s * 0.01;
+            const topR = 0.17 - s * 0.008;
+            const botR = 0.20 - s * 0.008;
             const segGeo = new THREE.CylinderGeometry(topR, botR, segH, 12);
             const segMesh = new THREE.Mesh(segGeo, mat.teak);
             segMesh.position.set(0, currY + segH / 2, currZ);
@@ -1531,44 +2052,207 @@ class VillaModel {
         }
         palmGroup.add(trunkGroup);
 
-        // Crownshaft
+        // Fibrous Brown Crownshaft
         const crownshaft = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.12, 0.14, 0.6, 12),
+            new THREE.CylinderGeometry(0.12, 0.14, 0.65, 12),
             mat.mossWall
         );
-        crownshaft.position.set(0, currY + 0.3, currZ);
+        crownshaft.position.set(0, currY + 0.32, currZ);
         palmGroup.add(crownshaft);
 
-        // 14 Multi-Tiered Drooping Palm Fronds
+        // Cluster of coconuts nestled under the fronds
+        for (let c = 0; c < 6; c++) {
+            const cAngle = (c / 6) * Math.PI * 2;
+            const coconut = new THREE.Mesh(
+                new THREE.SphereGeometry(0.10, 10, 10),
+                mat.thatchRoof
+            );
+            coconut.position.set(
+                Math.cos(cAngle) * 0.18,
+                currY + 0.35 + (c % 2) * 0.06,
+                currZ + Math.sin(cAngle) * 0.18
+            );
+            coconut.castShadow = true;
+            palmGroup.add(coconut);
+        }
+
+        // 14 Multi-Tiered Drooping Palm Fronds with Wind Sway Registration
         const frondCount = 14;
         for (let f = 0; f < frondCount; f++) {
             const frondGroup = new THREE.Group();
             const angle = (f / frondCount) * Math.PI * 2;
-            const frondLen = 2.4 + (f % 3) * 0.3;
+            const frondLen = 2.4 + (f % 3) * 0.35;
 
             const stem = new THREE.Mesh(
                 new THREE.BoxGeometry(0.04, 0.04, frondLen),
-                mat.mossWall
+                mat.tropicalLeaf
             );
             stem.position.z = frondLen / 2;
             stem.castShadow = true;
             frondGroup.add(stem);
 
             const leaflet = new THREE.Mesh(
-                new THREE.PlaneGeometry(0.65, frondLen * 0.85),
-                mat.mossWall
+                new THREE.PlaneGeometry(0.68, frondLen * 0.88),
+                mat.tropicalLeaf
             );
             leaflet.rotation.x = Math.PI / 2;
             leaflet.position.z = frondLen * 0.5;
             frondGroup.add(leaflet);
 
-            frondGroup.position.set(0, currY + 0.55, currZ);
+            frondGroup.position.set(0, currY + 0.58, currZ);
             frondGroup.rotation.y = angle;
-            frondGroup.rotation.x = 0.45 + (f % 2) * 0.25;
+            frondGroup.rotation.x = 0.42 + (f % 3) * 0.22;
             palmGroup.add(frondGroup);
+
+            // Register for natural wind sway animation
+            this.windAnimatedObjects.push({
+                object: frondGroup,
+                baseRotX: frondGroup.rotation.x,
+                baseRotZ: frondGroup.rotation.z,
+                phaseOffset: f * 0.45,
+                windStrength: 0.045
+            });
         }
 
         return palmGroup;
+    }
+
+    createBananaPlant(mat, scale = 1.0) {
+        const plantGroup = new THREE.Group();
+        plantGroup.scale.set(scale, scale, scale);
+
+        // Clustered fleshy pseudostem
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 1.4, 10), mat.tropicalLeaf);
+        stem.position.y = 0.7;
+        plantGroup.add(stem);
+
+        // 7 Broad arching paddle leaves
+        const leafCount = 7;
+        for (let l = 0; l < leafCount; l++) {
+            const leafGroup = new THREE.Group();
+            const angle = (l / leafCount) * Math.PI * 2;
+            const leafLen = 1.6 + (l % 2) * 0.4;
+
+            const midrib = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, leafLen), mat.tropicalLeaf);
+            midrib.position.z = leafLen / 2;
+            leafGroup.add(midrib);
+
+            const blade = new THREE.Mesh(new THREE.PlaneGeometry(0.75, leafLen * 0.9), mat.tropicalLeaf);
+            blade.rotation.x = Math.PI / 2;
+            blade.position.z = leafLen * 0.5;
+            leafGroup.add(blade);
+
+            leafGroup.position.set(0, 1.2, 0);
+            leafGroup.rotation.y = angle;
+            leafGroup.rotation.x = 0.55 + (l % 2) * 0.25;
+            plantGroup.add(leafGroup);
+
+            this.windAnimatedObjects.push({
+                object: leafGroup,
+                baseRotX: leafGroup.rotation.x,
+                baseRotZ: leafGroup.rotation.z,
+                phaseOffset: l * 0.6,
+                windStrength: 0.04
+            });
+        }
+
+        return plantGroup;
+    }
+
+    createFrangipaniTree(mat, scale = 1.0) {
+        const tree = new THREE.Group();
+        tree.scale.set(scale, scale, scale);
+
+        // Organic sculptural grey-brown trunk
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.16, 1.8, 10), mat.teak);
+        trunk.position.y = 0.9;
+        trunk.rotation.z = -0.08;
+        tree.add(trunk);
+
+        // 3 Organic branching limbs
+        [
+            { angle: 0, rx: 0.35, len: 1.4 },
+            { angle: Math.PI * 0.65, rx: 0.42, len: 1.2 },
+            { angle: -Math.PI * 0.7, rx: 0.38, len: 1.3 }
+        ].forEach((b, idx) => {
+            const limbGroup = new THREE.Group();
+            limbGroup.position.set(0, 1.6, 0);
+            limbGroup.rotation.y = b.angle;
+            limbGroup.rotation.x = b.rx;
+
+            const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, b.len, 8), mat.teak);
+            branch.position.z = b.len / 2;
+            branch.rotation.x = Math.PI / 2;
+            limbGroup.add(branch);
+
+            // Foliage clusters at branch ends
+            const foliage = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55, 1), mat.tropicalLeaf);
+            foliage.position.set(0, 0, b.len);
+            limbGroup.add(foliage);
+
+            // Yellow/cream frangipani blossoms
+            for (let fl = 0; fl < 4; fl++) {
+                const flower = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), mat.brightFlowerYellow);
+                flower.position.set(
+                    (Math.random() - 0.5) * 0.6,
+                    (Math.random() - 0.5) * 0.6,
+                    b.len + 0.35 + Math.random() * 0.2
+                );
+                limbGroup.add(flower);
+            }
+
+            tree.add(limbGroup);
+
+            this.windAnimatedObjects.push({
+                object: limbGroup,
+                baseRotX: limbGroup.rotation.x,
+                baseRotZ: limbGroup.rotation.z,
+                phaseOffset: idx * 0.9,
+                windStrength: 0.025
+            });
+        });
+
+        return tree;
+    }
+
+    createTropicalShrub(mat, scale = 1.0) {
+        const shrub = new THREE.Group();
+        shrub.scale.set(scale, scale, scale);
+
+        // Cluster of green foliage spheres
+        const clusters = [
+            { x: 0, y: 0.35, z: 0, r: 0.42 },
+            { x: -0.3, y: 0.4, z: 0.2, r: 0.36 },
+            { x: 0.3, y: 0.45, z: -0.2, r: 0.38 },
+            { x: 0.1, y: 0.55, z: 0.1, r: 0.32 }
+        ];
+
+        clusters.forEach((cl, idx) => {
+            const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(cl.r, 1), mat.tropicalLeaf);
+            bush.position.set(cl.x, cl.y, cl.z);
+            shrub.add(bush);
+
+            this.windAnimatedObjects.push({
+                object: bush,
+                baseRotX: bush.rotation.x,
+                baseRotZ: bush.rotation.z,
+                phaseOffset: idx * 0.7,
+                windStrength: 0.03
+            });
+        });
+
+        // Red hibiscus flowers
+        for (let fl = 0; fl < 3; fl++) {
+            const flower = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), mat.brightFlowerRed);
+            flower.position.set(
+                (Math.random() - 0.5) * 0.6,
+                0.45 + Math.random() * 0.25,
+                (Math.random() - 0.5) * 0.6
+            );
+            shrub.add(flower);
+        }
+
+        return shrub;
     }
 
     createAtmosphere() {
@@ -1611,16 +2295,28 @@ class VillaModel {
             this.camera.position.set(0, 3.2, 8.8);
             this.currentLookAt.set(0, 1.8, 0);
             this.camera.lookAt(this.currentLookAt);
+            if (this.controls) {
+                this.controls.target.copy(this.currentLookAt);
+                this.controls.enabled = true;
+                this.controls.update();
+            }
         } else if (mode === 'resort') {
             this.villaOverviewGroup.visible = false;
             this.resortGroup.visible = true;
-            if (this.planPlaneMesh) this.planPlaneMesh.material.opacity = 0.40;
+            // Keep plan overlay hidden — use real 3D geometry instead
+            if (this.planPlaneMesh) this.planPlaneMesh.material.opacity = 0.0;
             this.targetCameraPos.set(2, 42, 34);
             this.targetLookAt.set(2, 0, -2);
             this.targetExplosion = 0.0;
             this.camera.position.set(2, 42, 34);
             this.currentLookAt.set(2, 0, -2);
             this.camera.lookAt(this.currentLookAt);
+            if (this.controls) {
+                this.controls.target.copy(this.currentLookAt);
+                this.controls.maxDistance = 150;
+                this.controls.enabled = true;
+                this.controls.update();
+            }
         }
     }
 
@@ -1714,6 +2410,14 @@ class VillaModel {
                 this.targetCameraPos.set(0, 4.5, 12);
                 this.targetLookAt.set(0, 1.8, 0);
         }
+
+        if (this.camera) {
+            this.camera.position.copy(this.targetCameraPos);
+        }
+        if (this.controls) {
+            this.controls.target.copy(this.targetLookAt);
+            this.controls.update();
+        }
     }
 
     /* ═══════════════════════════════════════════════════════════════════════════
@@ -1798,12 +2502,8 @@ class VillaModel {
 
         const elapsed = this.clock.getElapsedTime();
 
-        if (this.isFreeOrbit && this.controls) {
+        if (this.controls) {
             this.controls.update();
-        } else {
-            this.camera.position.lerp(this.targetCameraPos, 0.05);
-            this.currentLookAt.lerp(this.targetLookAt, 0.05);
-            this.camera.lookAt(this.currentLookAt);
         }
 
         if (this.autoRotate && this.villaOverviewGroup) {
@@ -1836,6 +2536,16 @@ class VillaModel {
         }
         if (this.oceanWaterMesh) {
             this.oceanWaterMesh.position.y = -0.15 + Math.sin(elapsed * 1.1) * 0.035;
+        }
+
+        // Natural wind sway animation on tropical foliage & palm fronds
+        const windTime = elapsed * 1.4;
+        for (let i = 0; i < this.windAnimatedObjects.length; i++) {
+            const w = this.windAnimatedObjects[i];
+            const wave = Math.sin(windTime + w.phaseOffset);
+            const wave2 = Math.cos(windTime * 0.75 + w.phaseOffset);
+            w.object.rotation.z = w.baseRotZ + wave * w.windStrength;
+            w.object.rotation.x = w.baseRotX + wave2 * (w.windStrength * 0.6);
         }
 
         // Ambient dust particle drift

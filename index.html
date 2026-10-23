@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AER — Anandamayee Eco Resort | 3D Villa Model Explorer</title>
+    <title>AER — Anandamayee Eco Resort | 3D Architectural Explorer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Montserrat:wght@200;300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
         <div class="preloader-inner">
             <div class="preloader-logo">AER</div>
             <div class="preloader-bar"><div class="preloader-fill"></div></div>
-            <p class="preloader-text">Loading 3D Architectural Model & Procedural Shaders...</p>
+            <p class="preloader-text">Loading 3D Architectural Model &amp; Procedural Shaders...</p>
         </div>
     </div>
 
@@ -49,12 +49,6 @@
         </div>
 
         <div class="hud-right">
-            <!-- Navigation Mode Toggle -->
-            <button class="hud-tool-btn" id="btn-toggle-orbit" title="Toggle Free 3D Orbit / Scroll Tour (Shortcut: Space or O)">
-                <span class="tool-icon" id="orbit-icon">🕹️</span>
-                <span class="tool-label" id="orbit-label">Free Orbit</span>
-            </button>
-
             <!-- Exploded Cutaway Toggle -->
             <button class="hud-tool-btn" id="btn-toggle-exploded" title="Exploded Cutaway View (Shortcut: E)">
                 <span class="tool-icon">💥</span>
@@ -68,15 +62,21 @@
             </button>
 
             <!-- Lighting Mode Cycle -->
-            <button class="hud-tool-btn" id="btn-cycle-lighting" title="Cycle Lighting: Golden Sunset / Luxury Night / Studio Day (Shortcut: L)">
+            <button class="hud-tool-btn" id="btn-cycle-lighting" title="Cycle Lighting: Golden Sunset / Night / Daylight (Shortcut: L)">
                 <span class="tool-icon" id="lighting-icon">🌅</span>
                 <span class="tool-label" id="lighting-label">Golden</span>
             </button>
 
             <!-- Auto Rotate 360 -->
-            <button class="hud-tool-btn" id="btn-auto-rotate" title="Auto-Rotate 360° (Shortcut: A)">
+            <button class="hud-tool-btn" id="btn-auto-rotate" title="Auto-Rotate (Shortcut: A)">
                 <span class="tool-icon">🔄</span>
                 <span class="tool-label">Spin</span>
+            </button>
+
+            <!-- Camera Reset -->
+            <button class="hud-tool-btn" id="btn-reset-camera" title="Reset Camera (Shortcut: R)">
+                <span class="tool-icon">🔁</span>
+                <span class="tool-label">Reset</span>
             </button>
 
             <!-- Download / Export 3D Model GLTF/GLB -->
@@ -87,78 +87,126 @@
         </div>
     </header>
 
-    <!-- FLOATING LEFT ARCHITECTURAL ROOM / SIDE PRESET DOCK -->
+    <!-- FLOATING LEFT DOCK — Villa Viewpoints / Resort Facility Filters -->
     <aside id="room-dock" class="glass-panel">
-        <div class="dock-header">
-            <span class="dock-heading">INSPECT SIDES & ROOMS</span>
-            <span class="dock-shortcut-hint">Click to jump</span>
-        </div>
-        <div class="dock-items">
-            <button class="room-btn active" data-phase="0" data-hotspot="front">
-                <span class="room-icon">🏡</span>
-                <span class="room-text">
-                    <strong>Front Solarium & Teak Deck</strong>
-                    <small>0° • Main Exterior Elevation</small>
-                </span>
-            </button>
-            <button class="room-btn" data-phase="1" data-hotspot="infinityPool">
-                <span class="room-icon">🌊</span>
-                <span class="room-text">
-                    <strong>Infinity Plunge Pool</strong>
-                    <small>45° • East Horizon View</small>
-                </span>
-            </button>
-            <button class="room-btn" data-phase="2" data-hotspot="exploded">
-                <span class="room-icon">💥</span>
-                <span class="room-text">
-                    <strong>Exploded Cutaway View</strong>
-                    <small>135° • Structural Cross-Section</small>
-                </span>
-            </button>
-            <button class="room-btn" data-phase="3" data-hotspot="masterSuite">
-                <span class="room-icon">🛏️</span>
-                <span class="room-text">
-                    <strong>Mezzanine Master Suite</strong>
-                    <small>180° • Fluted Oak & LED Cove</small>
-                </span>
-            </button>
-            <button class="room-btn" data-phase="4" data-hotspot="bathroom">
-                <span class="room-icon">🛁</span>
-                <span class="room-text">
-                    <strong>Calacatta Spa Washroom</strong>
-                    <small>240° • Italian Marble & Moss</small>
-                </span>
-            </button>
-            <button class="room-btn" data-phase="5" data-hotspot="sunkenLounge">
-                <span class="room-icon">🛋️</span>
-                <span class="room-text">
-                    <strong>Sunken Living Lounge</strong>
-                    <small>300° • Japanese Tree Courtyard</small>
-                </span>
-            </button>
-            <button class="room-btn" data-phase="6" data-hotspot="floatingStairs">
-                <span class="room-icon">🪵</span>
-                <span class="room-text">
-                    <strong>Floating Eurostairs</strong>
-                    <small>340° • Cantilevered Oak Steps</small>
-                </span>
-            </button>
-            <button class="room-btn" data-phase="7" data-hotspot="aerial">
-                <span class="room-icon">🦅</span>
-                <span class="room-text">
-                    <strong>Complete 360° Overview</strong>
-                    <small>360° • Re-assembled Model</small>
-                </span>
-            </button>
+        <!-- VILLA VIEWPOINT PANEL -->
+        <div id="villa-dock-panel">
+            <div class="dock-header">
+                <span class="dock-heading">INSPECT VILLA</span>
+                <span class="dock-shortcut-hint">Click to jump</span>
+            </div>
+            <div class="dock-items">
+                <button class="room-btn active" data-hotspot="front" data-phase="0">
+                    <span class="room-icon">🏡</span>
+                    <span class="room-text">
+                        <strong>Front Exterior</strong>
+                        <small>Main elevation &amp; teak deck</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-hotspot="infinityPool" data-phase="1">
+                    <span class="room-icon">🌊</span>
+                    <span class="room-text">
+                        <strong>Pool &amp; Terrace</strong>
+                        <small>Infinity plunge pool view</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-hotspot="exploded" data-phase="2">
+                    <span class="room-icon">💥</span>
+                    <span class="room-text">
+                        <strong>Cutaway Section</strong>
+                        <small>Structural cross-section</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-hotspot="masterSuite" data-phase="3">
+                    <span class="room-icon">🛏️</span>
+                    <span class="room-text">
+                        <strong>Master Bedroom</strong>
+                        <small>Mezzanine suite &amp; oak wall</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-hotspot="bathroom" data-phase="4">
+                    <span class="room-icon">🛁</span>
+                    <span class="room-text">
+                        <strong>Spa Bathroom</strong>
+                        <small>Calacatta marble &amp; tub</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-hotspot="sunkenLounge" data-phase="5">
+                    <span class="room-icon">🛋️</span>
+                    <span class="room-text">
+                        <strong>Living Lounge</strong>
+                        <small>Sunken conversation pit</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-hotspot="floatingStairs" data-phase="6">
+                    <span class="room-icon">🪵</span>
+                    <span class="room-text">
+                        <strong>Floating Stairs</strong>
+                        <small>Cantilevered oak treads</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-hotspot="rearExterior" data-phase="7">
+                    <span class="room-icon">🦅</span>
+                    <span class="room-text">
+                        <strong>Rear Exterior</strong>
+                        <small>Aerial overview</small>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Cutaway Roof Lift Scrubber -->
+            <div class="exploded-scrubber-box">
+                <div class="scrubber-label">
+                    <span>CUTAWAY ROOF LIFT</span>
+                    <strong id="cutaway-val">0%</strong>
+                </div>
+                <input type="range" id="cutaway-slider" min="0" max="100" value="0" class="glass-range">
+            </div>
         </div>
 
-        <!-- Exploded View Lift Scrubber -->
-        <div class="exploded-scrubber-box">
-            <div class="scrubber-label">
-                <span>CUTAWAY ROOF LIFT</span>
-                <strong id="cutaway-val">0%</strong>
+        <!-- RESORT FACILITY PANEL -->
+        <div id="resort-dock-panel" style="display:none;">
+            <div class="dock-header">
+                <span class="dock-heading">RESORT FACILITIES</span>
+                <span class="dock-shortcut-hint">Click to highlight</span>
             </div>
-            <input type="range" id="cutaway-slider" min="0" max="100" value="0" class="glass-range">
+            <div class="dock-items">
+                <button class="room-btn active" data-facility="cottages">
+                    <span class="room-icon">🏡</span>
+                    <span class="room-text">
+                        <strong>10 Luxury Cottages</strong>
+                        <small>225 sqft each</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-facility="pool">
+                    <span class="room-icon">🏊</span>
+                    <span class="room-text">
+                        <strong>Pool &amp; Water</strong>
+                        <small>1,800 sqft lagoon pool</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-facility="banquet">
+                    <span class="room-icon">🏛️</span>
+                    <span class="room-text">
+                        <strong>Banquet Hall</strong>
+                        <small>2,000 sqft grand hall</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-facility="landscape">
+                    <span class="room-icon">🌿</span>
+                    <span class="room-text">
+                        <strong>Landscape</strong>
+                        <small>Palms, lawns &amp; gardens</small>
+                    </span>
+                </button>
+                <button class="room-btn" data-facility="paths">
+                    <span class="room-icon">🛤️</span>
+                    <span class="room-text">
+                        <strong>Paths &amp; Parking</strong>
+                        <small>Paved promenade</small>
+                    </span>
+                </button>
+            </div>
         </div>
     </aside>
 
@@ -171,7 +219,7 @@
             </button>
         </div>
 
-        <h2 class="card-title" id="card-title">Private Teak Deck & Entrance</h2>
+        <h2 class="card-title" id="card-title">Private Teak Deck &amp; Entrance</h2>
         <p class="card-subtitle" id="card-subtitle">South Elevation • Ground Level Indoor-Outdoor Living</p>
 
         <p class="card-desc" id="card-desc">
@@ -190,7 +238,7 @@
             </div>
             <div class="highlight-row">
                 <span class="highlight-label">FINISHES:</span>
-                <span class="highlight-val" id="hl-finishes">Bookmatched Calacatta Gold & Dark Fluted Oak</span>
+                <span class="highlight-val" id="hl-finishes">Bookmatched Calacatta Gold &amp; Dark Fluted Oak</span>
             </div>
             <div class="highlight-row">
                 <span class="highlight-label">WATER:</span>
@@ -216,34 +264,14 @@
         </div>
     </article>
 
-    <!-- FLOATING BOTTOM TIMELINE & 360° SCRUBBER HUD -->
-    <footer id="bottom-hud" class="glass-panel">
-        <div class="hud-timeline-wrapper">
-            <div class="timeline-meta">
-                <div class="meta-angle">
-                    <span class="angle-label">MODEL ORIENTATION:</span>
-                    <strong class="angle-val" id="hud-angle-val">0° — FRONT ELEVATION</strong>
-                </div>
-                <div class="meta-mode-hint" id="hud-hint">
-                    🖱️ Scroll mouse wheel or drag timeline scrubber to rotate villa 360°
-                </div>
-            </div>
-
-            <div class="timeline-bar-container">
-                <input type="range" id="timeline-scrubber" min="0" max="1000" value="0" class="glass-timeline">
-                <div class="timeline-ticks">
-                    <span class="tick" style="left: 0%;">0° Front</span>
-                    <span class="tick" style="left: 14%;">45° Pool</span>
-                    <span class="tick" style="left: 28%;">135° Cutaway</span>
-                    <span class="tick" style="left: 42%;">180° Suite</span>
-                    <span class="tick" style="left: 56%;">240° Spa Bath</span>
-                    <span class="tick" style="left: 70%;">300° Lounge</span>
-                    <span class="tick" style="left: 84%;">340° Stairs</span>
-                    <span class="tick" style="left: 100%;">360° Overview</span>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <!-- COMPACT STATUS STRIP (replaces large bottom scrubber) -->
+    <div id="status-strip" class="glass-panel">
+        <span class="status-mode" id="status-mode">🏡 LUXURY VILLA 3D</span>
+        <span class="status-sep">•</span>
+        <span class="status-view" id="hud-angle-val">0° — FRONT EXTERIOR</span>
+        <span class="status-sep">•</span>
+        <span class="status-hint">Drag to orbit • Scroll to zoom • Right-click to pan</span>
+    </div>
 
     <!-- TOAST / NOTIFICATION -->
     <div id="toast" class="glass-toast">
@@ -251,15 +279,11 @@
         <span class="toast-msg" id="toast-msg">Model updated</span>
     </div>
 
-    <!-- VIRTUAL SCROLL DRIVER TRACK (Enables natural mouse wheel / touch scroll) -->
-    <div id="scroll-track"></div>
-
     <!-- SCRIPTS -->
     <script src="js/three.min.js"></script>
     <script src="js/OrbitControls.js"></script>
     <script src="js/GLTFExporter.js"></script>
     <script src="js/gsap.min.js"></script>
-    <script src="js/ScrollTrigger.min.js"></script>
     <script src="js/villa-model.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/main.js"></script>

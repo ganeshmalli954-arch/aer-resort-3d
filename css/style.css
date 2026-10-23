@@ -340,7 +340,7 @@ body.model-viewer-body {
     position: fixed;
     left: 24px;
     top: 86px;
-    bottom: 96px;
+    bottom: 56px;
     width: 290px;
     z-index: 90;
     display: flex;
@@ -349,6 +349,7 @@ body.model-viewer-body {
     padding: 16px;
     border-radius: 20px;
     pointer-events: auto;
+    overflow-y: auto;
 }
 
 .dock-header {
