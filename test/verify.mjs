@@ -216,15 +216,132 @@ server.listen(PORT, async () => {
   })()`);
   console.log('✓ Wireframe CAD mode verified:', wireframeCheck);
 
-  // Verify GLB Export
+  // Verify Status Strip
+  const statusStripCheck = await evalInPage(`(() => {
+    const el = document.getElementById('status-strip');
+    return {
+      exists: !!el,
+      display: window.getComputedStyle(el).display,
+      position: window.getComputedStyle(el).position
+    };
+  })()`);
+  console.log('✓ Status Strip Check:', statusStripCheck);
+  if (!statusStripCheck.exists || statusStripCheck.position !== 'fixed') {
+    throw new Error('Status strip missing or not fixed');
+  }
+
+  // Verify Auto-Rotate in Villa & Resort Modes
+  const autoRotateCheck = await evalInPage(`(() => {
+    const btn = document.getElementById('btn-auto-rotate');
+    btn.click();
+    const ar1 = window.villaModel.autoRotate;
+    const cr1 = window.villaModel.controls.autoRotate;
+    document.getElementById('btn-mode-resort').click();
+    const crResort = window.villaModel.controls.autoRotate;
+    btn.click();
+    const ar0 = window.villaModel.autoRotate;
+    const cr0 = window.villaModel.controls.autoRotate;
+    document.getElementById('btn-mode-villa').click();
+    return { ar1, cr1, crResort, ar0, cr0 };
+  })()`);
+  console.log('✓ Auto-Rotate in Villa & Resort modes verified:', autoRotateCheck);
+  if (!autoRotateCheck.ar1 || !autoRotateCheck.cr1 || !autoRotateCheck.crResort || autoRotateCheck.ar0 || autoRotateCheck.cr0) {
+    throw new Error('Auto-Rotate failed verification across modes');
+  }
+
+  // Verify Cross-Mode Wireframe Synchronization
+  const crossModeWireframe = await evalInPage(`(() => {
+    const btn = document.getElementById('btn-toggle-wireframe');
+    btn.click(); // turn on wireframe
+    document.getElementById('btn-mode-resort').click();
+    let resortHasWireframe = false;
+    window.villaModel.resortGroup.traverse(c => {
+      if (c.isMesh && c.material) {
+        const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+        if (mat.wireframe) resortHasWireframe = true;
+      }
+    });
+    btn.click(); // turn off wireframe
+    document.getElementById('btn-mode-villa').click();
+    let villaStillWireframe = false;
+    window.villaModel.villaOverviewGroup.traverse(c => {
+      if (c.isMesh && c.material) {
+        const mat = Array.isArray(c.material) ? c.material[0] : c.material;
+        if (mat.wireframe) villaStillWireframe = true;
+      }
+    });
+    return { resortHasWireframe, villaStillWireframe };
+  })()`);
+  console.log('✓ Cross-mode wireframe verified:', crossModeWireframe);
+  if (!crossModeWireframe.resortHasWireframe || crossModeWireframe.villaStillWireframe) {
+    throw new Error('Cross-mode wireframe state desynchronized');
+  }
+
+  // Verify Resort Facility Navigation & Reset
+  const resortFacCheck = await evalInPage(`(() => {
+    document.getElementById('btn-mode-resort').click();
+    const poolBtn = document.querySelector('#resort-dock-panel .room-btn[data-facility="pool"]');
+    poolBtn.click();
+    const poolTitle = document.getElementById('card-title')?.textContent;
+    const poolActive = poolBtn.classList.contains('active');
+
+    // Reset camera in resort mode
+    document.getElementById('btn-reset-camera').click();
+    const resetTitle = document.getElementById('card-title')?.textContent;
+    const poolActiveAfterReset = poolBtn.classList.contains('active');
+    const angleText = document.getElementById('hud-angle-val')?.textContent;
+
+    // Test keyboard shortcut 3 for Banquet
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '3' }));
+    const banquetTitle = document.getElementById('card-title')?.textContent;
+
+    return { poolTitle, poolActive, resetTitle, poolActiveAfterReset, angleText, banquetTitle };
+  })()`);
+  console.log('✓ Resort facility navigation & reset verified:', resortFacCheck);
+  if (!resortFacCheck.poolActive || resortFacCheck.poolActiveAfterReset || !resortFacCheck.banquetTitle.includes('Banquet')) {
+    throw new Error('Resort facility navigation failed');
+  }
+
+  // Verify Mode Switch Camera Synchronization
+  const modeCameraSync = await evalInPage(`(() => {
+    document.getElementById('btn-mode-villa').click();
+    window.scrollController.jumpToPhase(4); // Spa Bathroom
+    const posPhase4 = window.villaModel.camera.position.clone();
+    document.getElementById('btn-mode-resort').click();
+    document.getElementById('btn-mode-villa').click();
+    const posRestored = window.villaModel.camera.position.clone();
+    const dist = posPhase4.distanceTo(posRestored);
+    const cardTitle = document.getElementById('card-title')?.textContent;
+    return { dist, cardTitle };
+  })()`);
+  console.log('✓ Mode switch camera synchronization verified:', modeCameraSync);
+  if (modeCameraSync.dist > 0.1 || !modeCameraSync.cardTitle.includes('Calacatta')) {
+    throw new Error('Mode switch camera synchronization failed');
+  }
+
+  // Verify GLB Export (Villa Mode)
+  await evalInPage(`document.getElementById('btn-mode-villa').click()`);
   const villaGlb = await evalInPage(`new Promise((resolve) => {
     window.villaModel.exportGLTF(true, (filename, err) => {
       resolve({ filename, success: !err });
     });
   })`);
   console.log('✓ Villa GLB Exporter:', villaGlb);
+  if (!villaGlb.success || villaGlb.filename !== 'AER_Balasore_Luxury_Villa_Cottage.glb') {
+    throw new Error('Villa GLB export failed');
+  }
 
-  if (!villaGlb.success) throw new Error('GLB exporter failed');
+  // Verify GLB Export (Resort Mode)
+  const resortGlb = await evalInPage(`new Promise((resolve) => {
+    document.getElementById('btn-mode-resort').click();
+    window.villaModel.exportGLTF(true, (filename, err) => {
+      resolve({ filename, success: !err });
+    });
+  })`);
+  console.log('✓ Resort GLB Exporter:', resortGlb);
+  if (!resortGlb.success || resortGlb.filename !== 'AER_Balasore_Master_Resort_SitePlan.glb') {
+    throw new Error('Resort GLB export failed');
+  }
 
   // Capture Screenshot of Photorealistic Render
   const takeScreenshot = (filename) => {

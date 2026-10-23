@@ -651,92 +651,44 @@ body.model-viewer-body {
     color: var(--champagne-light);
 }
 
-/* ── FLOATING BOTTOM TIMELINE & 360° SCRUBBER HUD ── */
-#bottom-hud {
+/* ── COMPACT BOTTOM STATUS STRIP ── */
+#status-strip {
     position: fixed;
+    bottom: 22px;
     left: 50%;
     transform: translateX(-50%);
-    bottom: 18px;
-    width: calc(100vw - 48px);
-    max-width: 860px;
     z-index: 95;
-    padding: 12px 24px;
-    border-radius: 20px;
-    pointer-events: auto;
-}
-
-.timeline-meta {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    gap: 12px;
+    padding: 8px 22px;
+    border-radius: 30px;
     font-size: 0.74rem;
-}
-
-.angle-label {
-    color: rgba(247, 244, 239, 0.55);
-    font-size: 0.68rem;
-    letter-spacing: 0.1em;
-}
-
-.angle-val {
-    color: var(--champagne-light);
-    font-weight: 600;
-    margin-left: 6px;
-    letter-spacing: 0.05em;
-}
-
-.meta-mode-hint {
-    color: rgba(247, 244, 239, 0.5);
-    font-size: 0.7rem;
-}
-
-.timeline-bar-container {
-    position: relative;
-    width: 100%;
-}
-
-.glass-timeline {
-    width: 100%;
-    height: 6px;
-    appearance: none;
-    -webkit-appearance: none;
-    background: rgba(247, 244, 239, 0.12);
-    border-radius: 6px;
-    outline: none;
-    cursor: pointer;
-}
-
-.glass-timeline::-webkit-slider-thumb {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--champagne-light), var(--champagne));
-    border: 2px solid #0F1714;
-    box-shadow: 0 0 12px var(--champagne-glow);
-    cursor: pointer;
-    transition: transform 0.15s ease;
-}
-
-.glass-timeline::-webkit-slider-thumb:hover {
-    transform: scale(1.3);
-}
-
-.timeline-ticks {
-    position: relative;
-    width: 100%;
-    height: 16px;
-    margin-top: 4px;
-}
-
-.tick {
-    position: absolute;
-    transform: translateX(-50%);
-    font-size: 0.6rem;
-    color: rgba(247, 244, 239, 0.45);
+    pointer-events: auto;
     white-space: nowrap;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.status-mode {
+    font-weight: 700;
+    color: var(--champagne-light);
+    letter-spacing: 0.08em;
+}
+
+.status-sep {
+    color: rgba(212, 169, 106, 0.4);
+}
+
+.status-view {
+    font-weight: 600;
+    color: var(--pearl);
+    letter-spacing: 0.04em;
+}
+
+.status-hint {
+    color: rgba(247, 244, 239, 0.5);
+    font-size: 0.68rem;
 }
 
 /* ── TELEGRAM REFERENCES COMPARISON DRAWER ── */
@@ -1035,12 +987,13 @@ body.model-viewer-body {
     .card-reference-thumb {
         height: 100px;
     }
-    #bottom-hud {
-        bottom: 10px;
-        width: calc(100vw - 20px);
-        padding: 10px 14px;
+    #status-strip {
+        bottom: 12px;
+        padding: 6px 14px;
+        font-size: 0.68rem;
+        max-width: calc(100vw - 24px);
     }
-    .timeline-ticks {
+    .status-hint {
         display: none;
     }
     .cursor-dot, .cursor-ring {

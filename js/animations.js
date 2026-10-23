@@ -208,28 +208,35 @@ class VillaViewpointController {
         const phase = this.phases[phaseIndex];
         if (!phase) return;
 
-        // Only apply villa camera/rotation when in villa mode
-        if (this.villa.activeMode === 'villa') {
-            // Set camera position directly
-            if (this.villa.camera) {
-                this.villa.camera.position.copy(phase.camera);
+        // If not in villa mode, switch to villa mode
+        if (this.villa.activeMode !== 'villa') {
+            const btnVilla = document.getElementById('btn-mode-villa');
+            if (btnVilla) {
+                btnVilla.click();
+            } else {
+                this.villa.setMode('villa');
             }
-            // Update OrbitControls target to look-at point
-            if (this.villa.controls) {
-                this.villa.controls.target.copy(phase.lookAt);
-                this.villa.controls.update();
-            }
+        }
 
-            this.villa.setRotationAngle(phase.rotation);
-            this.villa.setExplosionProgress(phase.cutaway);
+        // Set camera position directly
+        if (this.villa.camera) {
+            this.villa.camera.position.copy(phase.camera);
+        }
+        // Update OrbitControls target to look-at point
+        if (this.villa.controls) {
+            this.villa.controls.target.copy(phase.lookAt);
+            this.villa.controls.update();
+        }
 
-            // Sync cutaway slider
-            if (this.elements.cutawaySlider) {
-                this.elements.cutawaySlider.value = Math.round(phase.cutaway * 100);
-            }
-            if (this.elements.cutawayVal) {
-                this.elements.cutawayVal.textContent = `${Math.round(phase.cutaway * 100)}%`;
-            }
+        this.villa.setRotationAngle(phase.rotation);
+        this.villa.setExplosionProgress(phase.cutaway);
+
+        // Sync cutaway slider
+        if (this.elements.cutawaySlider) {
+            this.elements.cutawaySlider.value = Math.round(phase.cutaway * 100);
+        }
+        if (this.elements.cutawayVal) {
+            this.elements.cutawayVal.textContent = `${Math.round(phase.cutaway * 100)}%`;
         }
 
         this.updatePhaseUI(phaseIndex);

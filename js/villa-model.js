@@ -88,6 +88,7 @@ class VillaModel {
         this.poolWaterMesh = null;
         this.resortPoolWaterMesh = null;
         this.oceanWaterMesh = null;
+        this.fountainWaterMesh = null;
         this.planPlaneMesh = null;
         this.clock = new THREE.Clock();
 
@@ -1508,7 +1509,7 @@ class VillaModel {
         const poolSundeckGeo = new THREE.CylinderGeometry(5.4, 5.6, 0.22, 32);
         poolSundeckGeo.scale(1.48, 1.0, 0.95);
         const poolSundeck = new THREE.Mesh(poolSundeckGeo, mat.teak);
-        poolSundeck.position.y = 0.11;
+        poolSundeck.position.y = 0.30;
         poolSundeck.receiveShadow = true;
 
         // Hollow basin wall
@@ -1591,15 +1592,15 @@ class VillaModel {
         fCoping.rotation.x = -Math.PI / 2;
         fCoping.position.y = 0.50;
 
-        const fWater = new THREE.Mesh(new THREE.CircleGeometry(2.2, 28), mat.poolWater);
-        fWater.rotation.x = -Math.PI / 2;
-        fWater.position.y = 0.44;
+        this.fountainWaterMesh = new THREE.Mesh(new THREE.CircleGeometry(2.2, 28), mat.poolWater);
+        this.fountainWaterMesh.rotation.x = -Math.PI / 2;
+        this.fountainWaterMesh.position.y = 0.44;
 
         const fTier2 = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.2, 0.45, 24), mat.pearlWall);
         fTier2.position.y = 0.65;
         const fCenter = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 1.3, 16), mat.champagneMetal);
         fCenter.position.y = 1.05;
-        fountain.add(fBasin, fFloor, fCoping, fWater, fTier2, fCenter);
+        fountain.add(fBasin, fFloor, fCoping, this.fountainWaterMesh, fTier2, fCenter);
         fountain.position.set(13.5, 0, 2.0);
         this.resortGroup.add(fountain);
 
@@ -1965,10 +1966,10 @@ class VillaModel {
             this.villaOverviewGroup.add(palm);
         });
 
-        // Broadleaf Banana Plants next to pool terrace
-        [-2.5, 5.8].forEach((bx, idx) => {
+        // Broadleaf Banana Plants flanking perimeter solarium borders
+        [-6.2, 6.8].forEach((bx, idx) => {
             const banana = this.createBananaPlant(mat, 1.1);
-            banana.position.set(bx, 0.44, 5.6);
+            banana.position.set(bx, 0.44, idx === 0 ? 4.2 : 4.5);
             this.villaOverviewGroup.add(banana);
         });
 
@@ -2297,6 +2298,9 @@ class VillaModel {
             this.camera.lookAt(this.currentLookAt);
             if (this.controls) {
                 this.controls.target.copy(this.currentLookAt);
+                this.controls.maxDistance = 80;
+                this.controls.autoRotate = this.autoRotate;
+                this.controls.autoRotateSpeed = this.autoRotateSpeed * 2.0;
                 this.controls.enabled = true;
                 this.controls.update();
             }
@@ -2305,19 +2309,30 @@ class VillaModel {
             this.resortGroup.visible = true;
             // Keep plan overlay hidden — use real 3D geometry instead
             if (this.planPlaneMesh) this.planPlaneMesh.material.opacity = 0.0;
-            this.targetCameraPos.set(2, 42, 34);
-            this.targetLookAt.set(2, 0, -2);
+            this.targetCameraPos.set(-2, 22, 28);
+            this.targetLookAt.set(-1, 1.2, 0);
             this.targetExplosion = 0.0;
-            this.camera.position.set(2, 42, 34);
-            this.currentLookAt.set(2, 0, -2);
+            this.camera.position.set(-2, 22, 28);
+            this.currentLookAt.set(-1, 1.2, 0);
             this.camera.lookAt(this.currentLookAt);
             if (this.controls) {
                 this.controls.target.copy(this.currentLookAt);
                 this.controls.maxDistance = 150;
+                this.controls.autoRotate = this.autoRotate;
+                this.controls.autoRotateSpeed = this.autoRotateSpeed * 2.0;
                 this.controls.enabled = true;
                 this.controls.update();
             }
         }
+    }
+
+    setAutoRotate(enabled) {
+        this.autoRotate = (enabled !== undefined) ? enabled : !this.autoRotate;
+        if (this.controls) {
+            this.controls.autoRotate = this.autoRotate;
+            this.controls.autoRotateSpeed = this.autoRotateSpeed * 2.0;
+        }
+        return this.autoRotate;
     }
 
     setFreeOrbit(enabled) {
@@ -2342,16 +2357,17 @@ class VillaModel {
 
     toggleWireframe(enabled) {
         this.isWireframe = (enabled !== undefined) ? enabled : !this.isWireframe;
-        const target = (this.activeMode === 'resort') ? this.resortGroup : this.villaOverviewGroup;
-        target.traverse((child) => {
-            if (child.isMesh && child.material) {
-                if (Array.isArray(child.material)) {
-                    child.material.forEach(m => m.wireframe = this.isWireframe);
-                } else {
-                    child.material.wireframe = this.isWireframe;
+        if (this.mainGroup) {
+            this.mainGroup.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => m.wireframe = this.isWireframe);
+                    } else {
+                        child.material.wireframe = this.isWireframe;
+                    }
                 }
-            }
-        });
+            });
+        }
         return this.isWireframe;
     }
 
@@ -2503,11 +2519,12 @@ class VillaModel {
         const elapsed = this.clock.getElapsedTime();
 
         if (this.controls) {
+            this.controls.autoRotate = this.autoRotate;
+            this.controls.autoRotateSpeed = this.autoRotateSpeed * 2.0;
             this.controls.update();
-        }
-
-        if (this.autoRotate && this.villaOverviewGroup) {
-            this.villaOverviewGroup.rotation.y += 0.005 * this.autoRotateSpeed;
+        } else if (this.autoRotate) {
+            const activeGrp = (this.activeMode === 'resort') ? this.resortGroup : this.villaOverviewGroup;
+            if (activeGrp) activeGrp.rotation.y += 0.005 * this.autoRotateSpeed;
         }
 
         this.explosionFactor += (this.targetExplosion - this.explosionFactor) * 0.08;
@@ -2533,6 +2550,9 @@ class VillaModel {
         }
         if (this.resortPoolWaterMesh) {
             this.resortPoolWaterMesh.position.y = 0.58 + Math.sin(elapsed * 1.8 + 1.0) * 0.006;
+        }
+        if (this.fountainWaterMesh) {
+            this.fountainWaterMesh.position.y = 0.44 + Math.sin(elapsed * 2.2 + 2.0) * 0.005;
         }
         if (this.oceanWaterMesh) {
             this.oceanWaterMesh.position.y = -0.15 + Math.sin(elapsed * 1.1) * 0.035;

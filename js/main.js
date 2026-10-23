@@ -56,10 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (inspectionCard) inspectionCard.style.display = '';
             if (statusMode) statusMode.textContent = '🏡 LUXURY VILLA 3D';
 
-            // Restore villa card content
+            // Restore villa card content & camera position
             const idx = scrollController.currentPhaseIndex >= 0
                 ? scrollController.currentPhaseIndex : 0;
-            scrollController.updatePhaseUI(idx);
+            scrollController.jumpToPhase(idx);
             showToast('Mode: Luxury Villa 3D (225 sqft Cottage)');
 
         } else {
@@ -69,6 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (villaPanel)  villaPanel.style.display  = 'none';
             if (resortPanel) resortPanel.style.display = '';
             if (statusMode) statusMode.textContent = '🗺️ MASTER SITE PLAN 3D';
+
+            // Reset resort facility buttons active state
+            const resortButtons = document.querySelectorAll('#resort-dock-panel .room-btn');
+            resortButtons.forEach(b => b.classList.remove('active'));
 
             // Update inspection card for resort overview
             if (inspectionCard) {
@@ -239,6 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cutawayVal        = document.getElementById('cutaway-val');
 
     function toggleExploded() {
+        if (villaModel.activeMode !== 'villa') {
+            setMode('villa');
+        }
         const isExploded = villaModel.targetExplosion > 0.4;
         const targetVal  = isExploded ? 0.0 : 1.0;
 
@@ -291,9 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAutoRotate = document.getElementById('btn-auto-rotate');
 
     function toggleAutoRotate() {
-        villaModel.autoRotate = !villaModel.autoRotate;
-        btnAutoRotate.classList.toggle('active', villaModel.autoRotate);
-        showToast(`Auto Rotation: ${villaModel.autoRotate ? 'ON' : 'OFF'}`);
+        const active = villaModel.setAutoRotate();
+        btnAutoRotate.classList.toggle('active', active);
+        showToast(`Auto Rotation: ${active ? 'ON' : 'OFF'}`);
     }
 
     if (btnAutoRotate) btnAutoRotate.addEventListener('click', toggleAutoRotate);
@@ -306,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
             scrollController.jumpToPhase(0);
             showToast('Camera Reset to Front Exterior');
         } else {
-            villaModel.setMode('resort');
+            setMode('resort');
             showToast('Camera Reset to Aerial Oblique');
         }
     }
@@ -417,9 +424,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': {
-                const phaseNum = parseInt(e.key, 10) - 1;
+                const num = parseInt(e.key, 10) - 1;
                 if (villaModel.activeMode === 'villa') {
-                    scrollController.jumpToPhase(phaseNum);
+                    scrollController.jumpToPhase(num);
+                } else {
+                    const facBtns = Array.from(document.querySelectorAll('#resort-dock-panel .room-btn'));
+                    if (num < facBtns.length) {
+                        facBtns[num].click();
+                    }
                 }
                 break;
             }
