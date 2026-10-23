@@ -126,7 +126,7 @@ server.listen(PORT, async () => {
     });
   };
 
-  // Assertions
+  // Assertions: 3D Engine
   const state = await evalInPage(`({
     hasThree: typeof THREE !== 'undefined',
     hasControls: typeof THREE?.OrbitControls !== 'undefined',
@@ -142,18 +142,79 @@ server.listen(PORT, async () => {
     throw new Error('Core 3D engine components failed to initialize');
   }
 
-  // Verify Phase jumping
+  // Assertion: Verify Reference Elements Completely Removed
+  const refChecks = await evalInPage(`({
+    hasOpenRefsBtn: !!document.getElementById('btn-open-refs'),
+    hasReferenceDrawer: !!document.getElementById('reference-drawer'),
+    hasCardRefBox: !!document.getElementById('card-ref-box'),
+    hasCardRefImg: !!document.getElementById('card-ref-img'),
+    hasLightboxModal: !!document.getElementById('lightbox-modal'),
+    hasHighlightsBox: !!document.getElementById('card-highlights-box'),
+    hasHlDimensions: !!document.getElementById('hl-dimensions'),
+    hasHlVolume: !!document.getElementById('hl-volume'),
+    hasHlFinishes: !!document.getElementById('hl-finishes'),
+    hasHlWater: !!document.getElementById('hl-water')
+  })`);
+
+  console.log('✓ Reference Cleanup & Highlights Check:', refChecks);
+
+  if (refChecks.hasOpenRefsBtn || refChecks.hasReferenceDrawer || refChecks.hasCardRefBox || refChecks.hasCardRefImg || refChecks.hasLightboxModal) {
+    throw new Error('Reference elements still found on page');
+  }
+  if (!refChecks.hasHighlightsBox || !refChecks.hasHlDimensions || !refChecks.hasHlVolume || !refChecks.hasHlFinishes || !refChecks.hasHlWater) {
+    throw new Error('Architectural highlights panel elements missing');
+  }
+
+  // Verify Phase jumping & Highlights Sync
   for (let i = 0; i < 8; i++) {
     const phaseData = await evalInPage(`(() => {
       window.scrollController.jumpToPhase(${i});
       return {
         phase: window.scrollController.currentPhaseIndex,
         title: document.getElementById('card-title')?.textContent,
-        angle: document.getElementById('hud-angle-val')?.textContent
+        angle: document.getElementById('hud-angle-val')?.textContent,
+        dimensions: document.getElementById('hl-dimensions')?.textContent,
+        water: document.getElementById('hl-water')?.textContent
       };
     })()`);
-    console.log(`✓ Phase ${i} verified:`, phaseData.title, `(${phaseData.angle})`);
+    console.log(`✓ Phase ${i} verified:`, phaseData.title, `(${phaseData.angle}) ->`, phaseData.dimensions);
   }
+
+  // Verify Lighting Mode Cycles
+  const lightingCycle = await evalInPage(`(() => {
+    const btn = document.getElementById('btn-cycle-lighting');
+    const m0 = window.villaModel.lightingMode;
+    btn.click();
+    const m1 = window.villaModel.lightingMode;
+    btn.click();
+    const m2 = window.villaModel.lightingMode;
+    btn.click();
+    const m3 = window.villaModel.lightingMode;
+    return { m0, m1, m2, m3 };
+  })()`);
+  console.log('✓ Lighting cycle verified:', lightingCycle);
+
+  // Verify Exploded Cutaway
+  const explodedCheck = await evalInPage(`(() => {
+    const btn = document.getElementById('btn-toggle-exploded');
+    btn.click();
+    const exp1 = window.villaModel.targetExplosion;
+    btn.click();
+    const exp0 = window.villaModel.targetExplosion;
+    return { exp1, exp0 };
+  })()`);
+  console.log('✓ Exploded cutaway verified:', explodedCheck);
+
+  // Verify Wireframe CAD Mode
+  const wireframeCheck = await evalInPage(`(() => {
+    const btn = document.getElementById('btn-toggle-wireframe');
+    btn.click();
+    const wf1 = window.villaModel.isWireframe;
+    btn.click();
+    const wf0 = window.villaModel.isWireframe;
+    return { wf1, wf0 };
+  })()`);
+  console.log('✓ Wireframe CAD mode verified:', wireframeCheck);
 
   // Verify GLB Export
   const villaGlb = await evalInPage(`new Promise((resolve) => {
@@ -164,6 +225,39 @@ server.listen(PORT, async () => {
   console.log('✓ Villa GLB Exporter:', villaGlb);
 
   if (!villaGlb.success) throw new Error('GLB exporter failed');
+
+  // Capture Screenshot of Photorealistic Render
+  const takeScreenshot = (filename) => {
+    return new Promise((resolve) => {
+      const shotId = Math.floor(Math.random() * 100000);
+      const handler = (event) => {
+        const msg = JSON.parse(event.data.toString());
+        if (msg.id === shotId) {
+          ws.removeEventListener('message', handler);
+          const buf = Buffer.from(msg.result.data, 'base64');
+          fs.writeFileSync(path.join(ROOT, filename), buf);
+          console.log(`✓ Screenshot captured: ${filename} (${buf.length} bytes)`);
+          resolve();
+        }
+      };
+      ws.addEventListener('message', handler);
+      ws.send(JSON.stringify({
+        id: shotId,
+        method: 'Page.captureScreenshot',
+        params: { format: 'png' }
+      }));
+    });
+  };
+
+  // Wait 1.5s for camera lerp to settle at Phase 0 and capture screenshot
+  await evalInPage(`window.scrollController.jumpToPhase(0)`);
+  await new Promise(r => setTimeout(r, 1500));
+  await takeScreenshot('photorealistic-render-phase0.png');
+
+  // Jump to Master Site Plan mode and capture screenshot
+  await evalInPage(`document.getElementById('btn-mode-resort').click()`);
+  await new Promise(r => setTimeout(r, 1500));
+  await takeScreenshot('photorealistic-render-resort.png');
 
   // Clean up
   ws.close();

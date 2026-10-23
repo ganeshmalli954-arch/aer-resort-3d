@@ -23,8 +23,10 @@ class ScrollAnimationController {
             cardSubtitle:   document.getElementById('card-subtitle'),
             cardDesc:       document.getElementById('card-desc'),
             cardSpecs:      document.getElementById('card-specs'),
-            cardRefImg:     document.getElementById('card-ref-img'),
-            cardRefBox:     document.getElementById('card-ref-box'),
+            hlDimensions:   document.getElementById('hl-dimensions'),
+            hlVolume:       document.getElementById('hl-volume'),
+            hlFinishes:     document.getElementById('hl-finishes'),
+            hlWater:        document.getElementById('hl-water'),
             hudAngleVal:    document.getElementById('hud-angle-val'),
             timelineSlider: document.getElementById('timeline-scrubber'),
             cutawaySlider:  document.getElementById('cutaway-slider'),
@@ -45,10 +47,14 @@ class ScrollAnimationController {
                 badge: "EXTERIOR ELEVATION",
                 title: "Private Teak Deck & Entrance",
                 subtitle: "South Elevation • Ground Level Indoor-Outdoor Living",
-                desc: "Cantilevered timber eaves with dark standing seams. Frameless floor-to-ceiling glass sliders seamlessly connect the sunken living space to a private weathered teak sun deck, equipped with an integrated infinity plunge pool, twin minimalist loungers, and ambient underwater aquatic illumination.",
+                desc: "Cantilevered architectural timber eaves with dark standing seams and under-eave cove lighting. Frameless floor-to-ceiling glass sliders seamlessly connect the sunken living pavilion to a private weathered teak sun deck, equipped with an integrated infinity plunge pool, twin minimalist loungers, and ambient underwater illumination.",
                 specs: ["🪵 Weathered Teak Planks", "🏊 Private Plunge Pool", "🪟 Frameless Glass Sliders", "✨ Floating LED Underglow"],
-                refImg: "assets/references/photo_2026-10-23_13-05-38.jpg",
-                refTitle: "Infinity Plunge Pool Deck",
+                highlights: {
+                    dimensions: "225 sqft Interior • 140 sqft Teak Deck",
+                    volume: "6.2m Double-Height Glass Lightwell",
+                    finishes: "Natural Weathered Teak & Standing Seam Zinc",
+                    water: "1.4m Depth Infinity Pool with Basalt Coping"
+                },
                 angleText: "0° — FRONT ELEVATION"
             },
             {
@@ -61,10 +67,14 @@ class ScrollAnimationController {
                 badge: "LANDSCAPE CONNECTION",
                 title: "Infinity Water Horizon",
                 subtitle: "East Elevation • Bay of Bengal Sunrise Orientation",
-                desc: "Direct orientation toward the sea breeze and morning sun. The pool terrace extends flush with the water surface, framed by native coastal sand and lush coastal flora, reflecting natural golden daylight across the living pavilion.",
+                desc: "Direct orientation toward coastal breezes and morning sunrise. The pool terrace extends flush with the water surface with dark honed basalt coping, framed by coastal sand and lush tropical vegetation, casting physically accurate water reflections across the living pavilion.",
                 specs: ["🌅 Sunrise Orientation", "💡 Aquatic Cyan LED", "🏖️ Coastal Sand Buffer", "🌿 Native Palms"],
-                refImg: "assets/references/photo_2026-10-23_13-05-40.jpg",
-                refTitle: "Poolside Horizon & Garden",
+                highlights: {
+                    dimensions: "4.2m x 3.2m Basin • 1.4m Depth",
+                    volume: "Zero-Edge Overflow Toward Horizon",
+                    finishes: "Dark Honed Basalt Wet Edge & Submerged Mosaic",
+                    water: "Dual-Layer Dynamic Wave Ripples & Cyan Gradient"
+                },
                 angleText: "45° — EAST INFINITY POOL"
             },
             {
@@ -79,8 +89,12 @@ class ScrollAnimationController {
                 subtitle: "Cross-Section • Dual-Level Mezzanine Core",
                 desc: "The standing-seam zinc roof lifts 4.2m and the first-floor mezzanine lifts 1.8m to reveal the entire open-concept interior volume: upper master suite, double-height lightwell, cantilevered floating staircase, and ground sunken conversation lounge.",
                 specs: ["↕️ Dual-Level Layout", "💥 4.2m Structural Lift", "☀️ Central Skylight", "🏗️ Exposed Cantilever"],
-                refImg: "assets/references/photo_2026-10-23_13-05-50.jpg",
-                refTitle: "Interior Volume & Lightwell",
+                highlights: {
+                    dimensions: "Dual-Level Structural Cross-Section",
+                    volume: "4.2m Structural Lift • 1.8m Mezzanine Reveal",
+                    finishes: "Exposed Cantilevered Beams & Oak Floor Slabs",
+                    water: "Foundation Drainage & Sub-deck Linear LEDs"
+                },
                 angleText: "135° — EXPLODED CUTAWAY"
             },
             {
@@ -93,10 +107,14 @@ class ScrollAnimationController {
                 badge: "MEZZANINE SUITE",
                 title: "Master Bedroom Suite",
                 subtitle: "First Floor Mezzanine • Acoustic Oak & Indirect Light",
-                desc: "Directly matching the Telegram photo reference: a feature wall of vertical fluted dark oak slats with recessed 2700K warm LED cove backlighting. Low-profile Japanese platform king bed in champagne velvet, flanked by floating oak nightstands and bronze drop globe sconces.",
+                desc: "A full-height feature wall of vertical fluted dark oak slats with recessed 2700K warm LED cove backlighting. Low-profile Japanese platform king bed in champagne velvet, flanked by floating oak nightstands and bronze drop globe sconces overlooking the glass lightwell.",
                 specs: ["🪵 Fluted Oak Slats", "✨ 2700K Cove LED Strip", "🛏️ Low Platform Bed", "🛡️ Glass Balustrade"],
-                refImg: "assets/references/photo_2026-10-23_13-05-43.jpg",
-                refTitle: "Master Bedroom Suite",
+                highlights: {
+                    dimensions: "King Bed Platform • 180 sqft Mezzanine",
+                    volume: "2.8m Headroom Under Angled Zinc Soffit",
+                    finishes: "Dark Fluted Oak Slats & French Oak Parquet",
+                    water: "Ensuite Transition to Calacatta Spa Washroom"
+                },
                 angleText: "180° — MASTER BEDROOM SUITE"
             },
             {
@@ -109,10 +127,14 @@ class ScrollAnimationController {
                 badge: "WELLNESS SUITE",
                 title: "Calacatta Spa Washroom",
                 subtitle: "First Floor Wellness • Italian Stone & Living Botanical",
-                desc: "Synthesized from Telegram reference photos 13-05-37 and 13-05-42: floor-to-ceiling bookmatched Italian Calacatta Gold marble paired with a freestanding matte-black stone soaking tub, brushed brass floor-mounted mixer, floating circular backlit mirror, and a vertical preserved organic moss wall.",
+                desc: "Floor-to-ceiling bookmatched Italian Calacatta Gold marble paired with a freestanding matte-black stone soaking tub resting on a slatted teak drainage mat, brushed brass floor-mounted mixer, floating circular backlit mirror, and a vertical preserved organic moss wall.",
                 specs: ["🏛️ Calacatta Gold Marble", "🛁 Matte Black Oval Tub", "🌿 Preserved Living Moss", "🪞 Backlit Floating Mirror"],
-                refImg: "assets/references/photo_2026-10-23_13-05-42.jpg",
-                refTitle: "Freestanding Soaking Tub",
+                highlights: {
+                    dimensions: "1.7m Matte Black Oval Soaking Tub",
+                    volume: "Double-Height Vanity Niche with Halo Mirror",
+                    finishes: "Bookmatched Calacatta Gold & Preserved Moss",
+                    water: "Brushed Brass Floor Mixer & Concealed Drain"
+                },
                 angleText: "240° — CALACATTA SPA BATH"
             },
             {
@@ -125,10 +147,14 @@ class ScrollAnimationController {
                 badge: "GROUND FLOOR LIVING",
                 title: "Sunken Lounge & Courtyard Tree",
                 subtitle: "Ground Level Living • Biophilic Lightwell Centerpiece",
-                desc: "Step-down sunken conversation pit upholstered in champagne velvet with low Tom Ford honed marble coffee table. At the center of the lightwell sits an indoor Japanese ficus tree rooted in a circular pearl stone pebble bed, illuminated by ceiling downlights.",
+                desc: "Step-down sunken conversation pit upholstered in champagne velvet with low honed marble coffee table. At the center of the lightwell sits an indoor Japanese ficus tree rooted in a circular pearl stone pebble bed, illuminated by ceiling downlights and natural skylight.",
                 specs: ["🛋️ Sunken Conversation Pit", "🌳 Courtyard Japanese Tree", "☕ Low Honed Marble Table", "💡 Recessed Ceiling Spots"],
-                refImg: "assets/references/photo_2026-10-23_13-05-50.jpg",
-                refTitle: "Sunken Lounge & Courtyard Tree",
+                highlights: {
+                    dimensions: "2-Step Recessed Conversation Pit",
+                    volume: "6.2m Atrium Open to Architectural Skylight",
+                    finishes: "Champagne Velvet Modular Sofa & Marble Plinth",
+                    water: "Indoor Planter Bed with River Stones & Mini Uplights"
+                },
                 angleText: "300° — SUNKEN LIVING LOUNGE"
             },
             {
@@ -141,10 +167,14 @@ class ScrollAnimationController {
                 badge: "ARCHITECTURAL STAIRCASE",
                 title: "Eurostairs Floating Stairs",
                 subtitle: "Circulation Spine • Cantilevered Oak & Concealed LEDs",
-                desc: "Replicating the Eurostairs cantilevered system from Telegram photo 13-05-59: solid dark oak treads floating seamlessly out of the fluted wood wall with step-by-step integrated under-tread warm LED strips and a frameless 15mm glass balustrade with champagne handrail.",
+                desc: "Cantilevered floating staircase system: solid dark oak treads floating seamlessly out of the fluted wood wall with step-by-step integrated under-tread warm LED strips and a frameless 15mm tempered glass balustrade with champagne handrail.",
                 specs: ["🪵 Eurostairs Solid Oak", "💡 Under-Tread LED Strips", "🛡️ 15mm Glass Balustrade", "✨ Champagne Slim Rail"],
-                refImg: "assets/references/photo_2026-10-23_13-05-59.jpg",
-                refTitle: "Eurostairs Floating Staircase",
+                highlights: {
+                    dimensions: "11 Cantilevered Solid Oak Treads (80mm thick)",
+                    volume: "Seamless Double-Height Circulation Spine",
+                    finishes: "Solid French Oak & 15mm Architectural Glass",
+                    water: "Integrated Step-by-Step 2700K Linear LED Glow"
+                },
                 angleText: "340° — FLOATING EUROSTAIRS"
             },
             {
@@ -159,8 +189,12 @@ class ScrollAnimationController {
                 subtitle: "360° Panoramic View • Balasore Eco Resort",
                 desc: "The luxury cottage fully assembled in its coastal setting, showcasing the harmony of fluted timber, Italian Calacatta marble, seamless glass glazing, standing-seam zinc roof, and private infinity plunge pool deck. Switch to Master Site Plan 3D to see all 10 cottages arranged on site.",
                 specs: ["🏡 10 Luxury Cottages", "🏊 1,800 sqft Main Pool", "🏛️ 2,000 sqft Banquet Hall", "🌳 Eco Treehouse & Huts"],
-                refImg: "assets/references/photo_2026-10-23_13-05-38.jpg",
-                refTitle: "Completed Model Overview",
+                highlights: {
+                    dimensions: "Full 225 sqft Luxury Cottage Footprint",
+                    volume: "Integrated Indoor-Outdoor Tropical Pavilion",
+                    finishes: "PBR Calacatta • Oak • Teak • Basalt • Zinc",
+                    water: "Photorealistic Aquatic Shading & Ambient Lighting"
+                },
                 angleText: "360° — COMPLETE OVERVIEW"
             }
         ];
@@ -192,6 +226,10 @@ class ScrollAnimationController {
 
     /* ── Synchronize Model, Camera, UI to Progress (0.0 to 1.0) ── */
     applyProgress(p) {
+        if (this.villa.activeMode === 'resort') {
+            return;
+        }
+
         // 1. Model Rotation 360°
         const rotationAngle = -p * Math.PI * 2;
         this.villa.setRotationAngle(rotationAngle);
@@ -304,14 +342,12 @@ class ScrollAnimationController {
             this.elements.cardSpecs.innerHTML = phase.specs.map(spec => `<span class="spec-tag">${spec}</span>`).join('');
         }
 
-        // Update Reference thumbnail
-        if (this.elements.cardRefImg) {
-            this.elements.cardRefImg.src = phase.refImg;
-            this.elements.cardRefImg.alt = phase.refTitle;
-        }
-        if (this.elements.cardRefBox) {
-            this.elements.cardRefBox.dataset.fullSrc = phase.refImg;
-            this.elements.cardRefBox.dataset.title = phase.refTitle;
+        // Update Architectural Highlights
+        if (phase.highlights) {
+            if (this.elements.hlDimensions) this.elements.hlDimensions.textContent = phase.highlights.dimensions;
+            if (this.elements.hlVolume) this.elements.hlVolume.textContent = phase.highlights.volume;
+            if (this.elements.hlFinishes) this.elements.hlFinishes.textContent = phase.highlights.finishes;
+            if (this.elements.hlWater) this.elements.hlWater.textContent = phase.highlights.water;
         }
     }
 

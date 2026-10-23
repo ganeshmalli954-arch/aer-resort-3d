@@ -84,12 +84,6 @@
                 <span class="tool-icon">💾</span>
                 <span class="tool-label">Export 3D (.GLB)</span>
             </button>
-
-            <!-- Reference Drawer Toggle -->
-            <button class="hud-tool-btn" id="btn-open-refs" title="View Telegram Reference Photos & Walkthrough Video">
-                <span class="tool-icon">📷</span>
-                <span class="tool-label">References</span>
-            </button>
         </div>
     </header>
 
@@ -184,11 +178,23 @@
             Cantilevered timber eaves with dark standing seams. Frameless floor-to-ceiling glass sliders seamlessly connect the sunken living space to a private weathered teak sun deck, equipped with an integrated infinity plunge pool, twin minimalist loungers, and ambient underwater aquatic illumination.
         </p>
 
-        <!-- Reference Photo Thumbnail -->
-        <div class="card-reference-thumb" id="card-ref-box" title="Click to view high-res reference photo">
-            <img src="assets/references/photo_2026-10-23_13-05-38.jpg" alt="Reference Photo" id="card-ref-img">
-            <div class="ref-overlay">
-                <span class="ref-overlay-text">🔍 Inspect Telegram reference photo</span>
+        <!-- Architectural Highlights & Engineering Specs -->
+        <div class="card-highlights-box" id="card-highlights-box">
+            <div class="highlight-row">
+                <span class="highlight-label">DIMENSIONS:</span>
+                <span class="highlight-val" id="hl-dimensions">225 sqft Interior • 140 sqft Teak Deck</span>
+            </div>
+            <div class="highlight-row">
+                <span class="highlight-label">VOLUME:</span>
+                <span class="highlight-val" id="hl-volume">6.2m Double-Height Glass Lightwell</span>
+            </div>
+            <div class="highlight-row">
+                <span class="highlight-label">FINISHES:</span>
+                <span class="highlight-val" id="hl-finishes">Bookmatched Calacatta Gold & Dark Fluted Oak</span>
+            </div>
+            <div class="highlight-row">
+                <span class="highlight-label">WATER:</span>
+                <span class="highlight-val" id="hl-water">1.4m Depth Infinity Pool with Basalt Coping</span>
             </div>
         </div>
 
@@ -239,104 +245,10 @@
         </div>
     </footer>
 
-    <!-- TELEGRAM REFERENCES COMPARISON DRAWER -->
-    <aside id="reference-drawer" class="glass-drawer">
-        <div class="drawer-header">
-            <div class="drawer-title-group">
-                <h3>📷 Telegram Reference Materials (23rd Oct)</h3>
-                <p>Downloaded from WhatsApp & Telegram • Replicated in 3D Model</p>
-            </div>
-            <button class="drawer-close-btn" id="btn-close-refs">✕</button>
-        </div>
-
-        <div class="drawer-content">
-            <!-- Walkthrough Video -->
-            <div class="ref-video-card glass-subcard">
-                <h4>🎥 Multi-Level Architecture Walkthrough Video</h4>
-                <p>Reference video showing double-height volume, glass mezzanine, floating stairs, and fluted acoustic wall.</p>
-                <video controls poster="assets/references/photo_2026-10-23_13-05-50.jpg" class="drawer-video">
-                    <source src="assets/references/video_2026-10-23_13-05-51.mp4" type="video/mp4">
-                    Your browser does not support HTML5 video.
-                </video>
-            </div>
-
-            <!-- Master Plan -->
-            <div class="ref-image-card glass-subcard">
-                <div class="ref-img-wrap">
-                    <img src="assets/plan/master-plan.png" alt="Ashushri Creations Master Layout Plan">
-                </div>
-                <div class="ref-caption">
-                    <h4>Ashushri Creations Master Layout Plan</h4>
-                    <p>Balasore, Odisha. Promoter: Biswajeet Ghosh. 10 luxury cottages (225 sqft each), 1,800 sqft pool, banquet hall, treehouse, mud huts, campfire.</p>
-                </div>
-            </div>
-
-            <!-- Reference Gallery Grid -->
-            <div class="drawer-grid">
-                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-43.jpg" data-title="Master Suite Bedroom">
-                    <img src="assets/references/photo_2026-10-23_13-05-43.jpg" alt="Master Suite with Fluted Wood">
-                    <div class="ref-grid-info">
-                        <strong>Master Suite Fluted Wood</strong>
-                        <p>Dark acoustic slats with warm recessed LED cove backlighting.</p>
-                    </div>
-                </div>
-
-                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-59.jpg" data-title="Cantilevered Floating Stairs">
-                    <img src="assets/references/photo_2026-10-23_13-05-59.jpg" alt="Eurostairs Cantilevered Floating Stairs">
-                    <div class="ref-grid-info">
-                        <strong>Cantilevered Floating Stairs</strong>
-                        <p>Solid oak floating steps with under-tread LED strips and glass rail.</p>
-                    </div>
-                </div>
-
-                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-42.jpg" data-title="Italian Calacatta Spa Bath">
-                    <img src="assets/references/photo_2026-10-23_13-05-42.jpg" alt="Freestanding Soaking Tub">
-                    <div class="ref-grid-info">
-                        <strong>Italian Calacatta Spa Bath</strong>
-                        <p>Matte-black soaking tub, gold marble, and brass brushed tapware.</p>
-                    </div>
-                </div>
-
-                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-50.jpg" data-title="Sunken Lounge & Courtyard Tree">
-                    <img src="assets/references/photo_2026-10-23_13-05-50.jpg" alt="Sunken Living Room with Japanese Tree">
-                    <div class="ref-grid-info">
-                        <strong>Sunken Lounge & Courtyard Tree</strong>
-                        <p>Double-height conversation pit with indoor Japanese ficus lightwell.</p>
-                    </div>
-                </div>
-
-                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-37.jpg" data-title="Preserved Living Moss Wall">
-                    <img src="assets/references/photo_2026-10-23_13-05-37.jpg" alt="Living Moss Vanity Wall">
-                    <div class="ref-grid-info">
-                        <strong>Preserved Living Moss Wall</strong>
-                        <p>Vertical organic moss vanity wall with backlit floating mirror.</p>
-                    </div>
-                </div>
-
-                <div class="ref-grid-item glass-subcard" data-src="assets/references/photo_2026-10-23_13-05-38.jpg" data-title="Infinity Plunge Pool & Teak Deck">
-                    <img src="assets/references/photo_2026-10-23_13-05-38.jpg" alt="Infinity Plunge Pool Deck">
-                    <div class="ref-grid-info">
-                        <strong>Infinity Plunge Pool & Teak Deck</strong>
-                        <p>Weathered teak solarium with infinity water horizon and twin loungers.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </aside>
-
     <!-- TOAST / NOTIFICATION -->
     <div id="toast" class="glass-toast">
         <span class="toast-icon">✓</span>
         <span class="toast-msg" id="toast-msg">Model updated</span>
-    </div>
-
-    <!-- LIGHTBOX MODAL -->
-    <div id="lightbox-modal" class="glass-modal">
-        <div class="modal-content">
-            <button class="modal-close-btn" id="btn-close-modal">✕</button>
-            <img src="" alt="Full Reference" id="modal-img">
-            <p id="modal-caption"></p>
-        </div>
     </div>
 
     <!-- VIRTUAL SCROLL DRIVER TRACK (Enables natural mouse wheel / touch scroll) -->

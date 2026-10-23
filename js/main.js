@@ -66,12 +66,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cardSubtitle = document.getElementById('card-subtitle');
                 const cardDesc = document.getElementById('card-desc');
                 const cardSpecs = document.getElementById('card-specs');
-                const cardRefImg = document.getElementById('card-ref-img');
+                const hlDimensions = document.getElementById('hl-dimensions');
+                const hlVolume = document.getElementById('hl-volume');
+                const hlFinishes = document.getElementById('hl-finishes');
+                const hlWater = document.getElementById('hl-water');
 
                 if (cardBadge) cardBadge.textContent = 'MASTER SITE PLAN';
                 if (cardTitle) cardTitle.textContent = '2.5 Acre Eco Resort Layout';
                 if (cardSubtitle) cardSubtitle.textContent = 'Ashushri Creations • Balasore, Odisha';
                 if (cardDesc) cardDesc.textContent = 'Master architectural layout designed for Promoter Biswajeet Ghosh. Features 10 luxury private cottages (225 sqft each) along the central garden promenade, an 1,800 sqft resort pool with sunken lounge, 2,000 sqft grand banquet hall, eco treehouse, authentic mud huts, bonfire pit, and landscaped water fountain.';
+                if (hlDimensions) hlDimensions.textContent = '2.5 Acres Site • 10 Luxury Cottages (225 sqft each)';
+                if (hlVolume) hlVolume.textContent = '2,000 sqft Banquet Hall • 525 sqft Commercial Kitchen';
+                if (hlFinishes) hlFinishes.textContent = 'Paved Stone Promenade • Native Teak & Terracotta';
+                if (hlWater) hlWater.textContent = '1,800 sqft Resort Lagoon Pool & Central Water Fountain';
+
                 if (cardSpecs) {
                     cardSpecs.innerHTML = [
                         '<span class="spec-tag">🏡 10 Luxury Cottages</span>',
@@ -81,10 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         '<span class="spec-tag">🔥 Bonfire Gathering Pit</span>',
                         '<span class="spec-tag">⛲ Central Water Fountain</span>'
                     ].join('');
-                }
-                if (cardRefImg) {
-                    cardRefImg.src = 'assets/plan/master-plan.png';
-                    cardRefImg.alt = 'Ashushri Creations Master Layout Plan';
                 }
             }
             showToast('Mode: 2.5 Acre Master Plan (Ashushri Creations)');
@@ -208,24 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* ── 11. Telegram Reference Materials Drawer ── */
-    const btnOpenRefs = document.getElementById('btn-open-refs');
-    const btnCloseRefs = document.getElementById('btn-close-refs');
-    const referenceDrawer = document.getElementById('reference-drawer');
-
-    if (btnOpenRefs && referenceDrawer) {
-        btnOpenRefs.addEventListener('click', () => {
-            referenceDrawer.classList.add('open');
-        });
-    }
-
-    if (btnCloseRefs && referenceDrawer) {
-        btnCloseRefs.addEventListener('click', () => {
-            referenceDrawer.classList.remove('open');
-        });
-    }
-
-    /* ── 12. Minimize Inspection Card Toggle ── */
+    /* ── 11. Minimize Inspection Card Toggle ── */
     const btnMinimizeCard = document.getElementById('btn-minimize-card');
     if (btnMinimizeCard && inspectionCard) {
         btnMinimizeCard.addEventListener('click', () => {
@@ -234,49 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btnMinimizeCard.innerHTML = isMin ? '<span class="minimize-icon">◀</span>' : '<span class="minimize-icon">✕</span>';
         });
     }
-
-    /* ── 13. Lightbox Modal for Reference Inspection ── */
-    const lightboxModal = document.getElementById('lightbox-modal');
-    const modalImg = document.getElementById('modal-img');
-    const modalCaption = document.getElementById('modal-caption');
-    const btnCloseModal = document.getElementById('btn-close-modal');
-
-    function openLightbox(src, caption) {
-        if (!lightboxModal || !modalImg) return;
-        modalImg.src = src;
-        if (modalCaption) modalCaption.textContent = caption || 'Reference Photo';
-        lightboxModal.classList.add('open');
-    }
-
-    function closeLightbox() {
-        if (lightboxModal) lightboxModal.classList.remove('open');
-    }
-
-    if (btnCloseModal) btnCloseModal.addEventListener('click', closeLightbox);
-    if (lightboxModal) {
-        lightboxModal.addEventListener('click', (e) => {
-            if (e.target === lightboxModal) closeLightbox();
-        });
-    }
-
-    // Connect Inspection Card Thumbnail to Lightbox
-    const cardRefBox = document.getElementById('card-ref-box');
-    if (cardRefBox) {
-        cardRefBox.addEventListener('click', () => {
-            const img = document.getElementById('card-ref-img');
-            const title = document.getElementById('card-title')?.textContent || 'Reference Photo';
-            if (img) openLightbox(img.src, title);
-        });
-    }
-
-    // Connect Drawer Gallery Items to Lightbox
-    document.querySelectorAll('.ref-grid-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const src = item.dataset.src || item.querySelector('img')?.src;
-            const title = item.dataset.title || item.querySelector('strong')?.textContent;
-            if (src) openLightbox(src, title);
-        });
-    });
 
     /* ── 14. Custom Cursor ── */
     const cursorDot = document.querySelector('.cursor-dot');
@@ -305,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCursor();
 
         // Enlarge on hoverable elements
-        const hoverables = 'button, input, a, .card-reference-thumb, .ref-grid-item';
+        const hoverables = 'button, input, a, .mode-btn, .hud-tool-btn, .room-btn';
         document.querySelectorAll(hoverables).forEach(el => {
             el.addEventListener('mouseenter', () => {
                 cursorRing.style.width = '48px';
@@ -320,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* ── 15. Keyboard Shortcuts for Power Users ── */
+    /* ── 13. Keyboard Shortcuts for Power Users ── */
     window.addEventListener('keydown', (e) => {
         // Ignore if user is typing in an input
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -355,10 +299,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'm':
                 setMode(villaModel.activeMode === 'villa' ? 'resort' : 'villa');
-                break;
-            case 'escape':
-                closeLightbox();
-                if (referenceDrawer) referenceDrawer.classList.remove('open');
                 break;
             case '1':
             case '2':
