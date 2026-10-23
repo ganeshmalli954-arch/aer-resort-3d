@@ -1,32 +1,67 @@
-/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════════════════════
    Main Application Controller
-   Initializes all modules, handles preloader, cursor, nav
-   ═══════════════════════════════════════════════════════════════ */
+   Initializes 3D Model, GSAP ScrollTrigger, Custom Cursor,
+   Interactive 3D Dock Controls, and Section Transitions
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ── Preloader ── */
     const preloader = document.getElementById('preloader');
-    window.addEventListener('load', () => {
-        setTimeout(() => {
+    const dismissPreloader = () => {
+        if (!preloader.classList.contains('loaded')) {
             preloader.classList.add('loaded');
             startHeroAnimations();
-        }, 2800);
-    });
+        }
+    };
 
-    // Fallback: hide preloader after 5s
-    setTimeout(() => {
-        preloader.classList.add('loaded');
-        startHeroAnimations();
-    }, 5000);
+    window.addEventListener('load', () => setTimeout(dismissPreloader, 2200));
+    setTimeout(dismissPreloader, 4000); // safety fallback
 
-    /* ── Initialize 3D Model ── */
+    /* ── Initialize 3D Architectural Engine ── */
     const villaModel = new VillaModel();
 
-    /* ── Initialize Scroll Animations ── */
+    /* ── Initialize Scroll-Driven Animation Controller ── */
     const scrollController = new ScrollAnimationController(villaModel);
 
-    /* ── Hero Entrance Animations ── */
+    /* ── 3D Viewport Dock Controls ── */
+    const dockButtons = document.querySelectorAll('.dock-btn');
+    dockButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            dockButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const mode = btn.dataset.mode;
+            villaModel.setMode(mode);
+
+            // If user clicked resort, scroll them into the view
+            const cottagesSec = document.getElementById('cottages');
+            if (cottagesSec && window.scrollY < cottagesSec.offsetTop - 100) {
+                cottagesSec.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+
+    const hotspotButtons = document.querySelectorAll('.hotspot-btn');
+    hotspotButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            hotspotButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Set villa mode active on dock as well
+            dockButtons.forEach(b => b.classList.toggle('active', b.dataset.mode === 'villa'));
+
+            const spot = btn.dataset.hotspot;
+            villaModel.focusHotspot(spot);
+
+            const cottagesSec = document.getElementById('cottages');
+            if (cottagesSec && (window.scrollY < cottagesSec.offsetTop || window.scrollY > cottagesSec.offsetTop + 1000)) {
+                cottagesSec.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+
+    /* ── Hero Entrance Sequence ── */
     function startHeroAnimations() {
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
@@ -83,8 +118,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         animateCursor();
 
-        // Expand cursor on interactive elements
-        document.querySelectorAll('a, button, .glass-card, .gallery-item').forEach(el => {
+        // Cursor scale on hoverable items
+        const hoverables = 'a, button, .glass-card, .gallery-item, .moodboard-card, .legend-item';
+        document.querySelectorAll(hoverables).forEach(el => {
             el.addEventListener('mouseenter', () => {
                 cursorDot.style.width = '12px';
                 cursorDot.style.height = '12px';
@@ -104,10 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* ── Navigation Scroll Effects ── */
+    /* ── Navbar Glass Header on Scroll ── */
     const nav = document.getElementById('main-nav');
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 80) {
+        if (window.scrollY > 60) {
             nav.classList.add('scrolled');
         } else {
             nav.classList.remove('scrolled');
@@ -134,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* ── Smooth Scroll for Nav Links ── */
+    /* ── Smooth Navigation Scrolling ── */
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
@@ -145,51 +181,39 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* ── Parallax floating elements ── */
+    /* ── Floating Atmospheric Glow Orbs ── */
     const createFloatingOrbs = () => {
         const container = document.createElement('div');
         container.className = 'ambient-particles';
         document.body.appendChild(container);
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 6; i++) {
             const orb = document.createElement('div');
             orb.style.cssText = `
                 position: absolute;
-                width: ${30 + Math.random() * 60}px;
-                height: ${30 + Math.random() * 60}px;
+                width: ${40 + Math.random() * 80}px;
+                height: ${40 + Math.random() * 80}px;
                 border-radius: 50%;
                 background: radial-gradient(circle, rgba(212, 169, 106, 0.08) 0%, transparent 70%);
                 left: ${Math.random() * 100}%;
                 top: ${Math.random() * 100}%;
-                animation: float-orb ${8 + Math.random() * 8}s ease-in-out infinite;
-                animation-delay: ${Math.random() * 5}s;
+                animation: float-orb ${10 + Math.random() * 8}s ease-in-out infinite;
+                animation-delay: ${Math.random() * 4}s;
+                pointer-events: none;
             `;
             container.appendChild(orb);
         }
     };
-
     createFloatingOrbs();
 
-    // CSS for floating orbs animation
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes float-orb {
-            0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-            25% { transform: translate(30px, -40px) scale(1.1); opacity: 0.7; }
-            50% { transform: translate(-20px, -80px) scale(0.9); opacity: 0.5; }
-            75% { transform: translate(40px, -30px) scale(1.05); opacity: 0.6; }
-        }
-    `;
-    document.head.appendChild(style);
-
-    /* ── Form Submit Handler ── */
+    /* ── Form Handler ── */
     const form = document.querySelector('form');
     if (form) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const btn = form.querySelector('.btn-primary');
             const originalText = btn.textContent;
-            btn.textContent = '✓ Sent Successfully';
+            btn.textContent = '✓ Enquiry Transmitted to AER Team';
             btn.style.background = 'linear-gradient(135deg, #2D6B3F, #3D8B55)';
             btn.style.color = '#fff';
             setTimeout(() => {
@@ -197,28 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.style.background = '';
                 btn.style.color = '';
                 form.reset();
-            }, 3000);
+            }, 3500);
         });
     }
 
-    /* ── Intersection Observer for Lazy Reveals ── */
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, observerOptions);
-
-    document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => {
-        observer.observe(el);
-    });
-
-    console.log('%c AER — Anandamayee Eco Resort ', 'background: linear-gradient(135deg, #2D4A3E, #1A2F26); color: #D4A96A; font-size: 14px; padding: 10px 20px; border-radius: 4px; font-family: Georgia, serif;');
-    console.log('%c Nature. Serenity. Sustainability. ', 'color: #C8BBA8; font-size: 10px; font-family: Georgia, serif;');
+    console.log('%c AER — Anandamayee Eco Resort | Balasore, Odisha ', 'background: linear-gradient(135deg, #1A2F26, #2D4A3E); color: #D4A96A; font-size: 13px; font-weight: bold; padding: 8px 16px; border-radius: 4px;');
 });

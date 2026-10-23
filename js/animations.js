@@ -1,18 +1,25 @@
-/* ═══════════════════════════════════════════════════════════════
-   Scroll-Driven 3D Animation Controller
-   Uses GSAP ScrollTrigger to control villa rotation,
-   camera movement, and info panel reveals
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════════
+   AER — Scroll-Driven 3D Animation Controller
+   Directly drives:
+   - 3D Model 360° Rotation & Camera Perspectives
+   - Exploded View Cutaway (Roof & Floor lifting to reveal interior)
+   - Synchronized Info Panels (Master Suite, Spa Bath, Sunken Lounge, Deck)
+   - Dynamic Camera Zoom into Reference Architectures
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
 class ScrollAnimationController {
     constructor(villaModel) {
         this.villa = villaModel;
         this.infoPanels = {
-            front: document.getElementById('info-front'),
-            right: document.getElementById('info-right'),
-            back:  document.getElementById('info-back'),
-            left:  document.getElementById('info-left'),
-            top:   document.getElementById('info-top'),
+            front:        document.getElementById('info-front'),
+            right:        document.getElementById('info-right'),
+            back:         document.getElementById('info-back'),
+            left:         document.getElementById('info-left'),
+            top:          document.getElementById('info-top'),
+            exploded:     document.getElementById('info-exploded'),
+            masterSuite:  document.getElementById('info-suite'),
+            washroom:     document.getElementById('info-washroom'),
+            lounge:       document.getElementById('info-lounge')
         };
 
         gsap.registerPlugin(ScrollTrigger);
@@ -21,132 +28,186 @@ class ScrollAnimationController {
         this.setupNavHighlighting();
     }
 
-    /* ── Main 3D Scroll Animation ── */
+    /* ── Main 3D Scroll-Driven Choreography ── */
     setupScrollAnimations() {
         const cottagesSection = document.getElementById('cottages');
         if (!cottagesSection) return;
 
-        // Master timeline pinned to the cottages section
+        // Master Timeline scrubbed to scroll position
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: cottagesSection,
                 start: 'top top',
                 end: 'bottom bottom',
-                scrub: 1.5,
+                scrub: 1.2,
                 pin: false,
                 onUpdate: (self) => {
-                    this.updateInfoPanels(self.progress);
+                    const p = self.progress;
+                    this.updateInfoPanels(p);
+
+                    // Exploded View Cutaway Control (Progress 0.45 -> 0.75)
+                    if (p >= 0.42 && p <= 0.78) {
+                        const explosionP = (p - 0.42) / 0.36;
+                        // Peak explosion around midpoint
+                        const expCurve = Math.sin(explosionP * Math.PI);
+                        this.villa.setExplosionProgress(expCurve * 1.0);
+                    } else {
+                        this.villa.setExplosionProgress(0.0);
+                    }
                 }
             }
         });
 
-        // Phase 1: Front view (0% - 15%) — Initial approach
-        tl.to(this.villa.resortGroup.rotation, {
-            y: 0,
-            duration: 15,
+        // ── Phase 1 (0% - 18%): Front Exterior & Infinity Deck Approach ──
+        tl.to(this.villa.villaOverviewGroup.rotation, {
+            y: 0.15,
+            duration: 18,
+            ease: 'none'
+        }, 0);
+        tl.to(this.villa.targetCameraPos, {
+            x: 0,
+            y: 4.0,
+            z: 11.5,
+            duration: 18,
+            ease: 'none'
+        }, 0);
+        tl.to(this.villa.targetLookAt, {
+            x: 0,
+            y: 1.8,
+            z: 0,
+            duration: 18,
+            ease: 'none'
         }, 0);
 
-        tl.to(this.villa.camera.position, {
-            z: 10,
-            y: 3,
-            duration: 15,
-        }, 0);
-
-        // Phase 2: Rotate to right/east side (15% - 35%)
-        tl.to(this.villa.resortGroup.rotation, {
-            y: -Math.PI / 2,
-            duration: 20,
-        }, 15);
-
-        tl.to(this.villa.camera.position, {
-            z: 11,
-            y: 4,
-            duration: 20,
-        }, 15);
-
-        // Phase 3: Rotate to back/rear (35% - 55%)
-        tl.to(this.villa.resortGroup.rotation, {
-            y: -Math.PI,
-            duration: 20,
-        }, 35);
-
-        tl.to(this.villa.camera.position, {
-            z: 12,
+        // ── Phase 2 (18% - 35%): Orbit to East Garden & Private Pool ──
+        tl.to(this.villa.villaOverviewGroup.rotation, {
+            y: -Math.PI * 0.45,
+            duration: 17,
+            ease: 'none'
+        }, 18);
+        tl.to(this.villa.targetCameraPos, {
+            x: 6.5,
             y: 3.5,
-            duration: 20,
+            z: 8.5,
+            duration: 17,
+            ease: 'none'
+        }, 18);
+        tl.to(this.villa.targetLookAt, {
+            x: 1.5,
+            y: 1.2,
+            z: 1.0,
+            duration: 17,
+            ease: 'none'
+        }, 18);
+
+        // ── Phase 3 (35% - 52%): Exploded View Initiation & Master Suite Reveal ──
+        tl.to(this.villa.villaOverviewGroup.rotation, {
+            y: -Math.PI * 0.85,
+            duration: 17,
+            ease: 'none'
+        }, 35);
+        tl.to(this.villa.targetCameraPos, {
+            x: 5.0,
+            y: 7.2,
+            z: 10.0,
+            duration: 17,
+            ease: 'none'
+        }, 35);
+        tl.to(this.villa.targetLookAt, {
+            x: -1.0,
+            y: 2.8,
+            z: 0.5,
+            duration: 17,
+            ease: 'none'
         }, 35);
 
-        // Phase 4: Rotate to left/west side (55% - 75%)
-        tl.to(this.villa.resortGroup.rotation, {
-            y: -Math.PI * 1.5,
-            duration: 20,
-        }, 55);
+        // ── Phase 4 (52% - 70%): Dive into Luxury Spa Bath & Floating Glass Stairs ──
+        tl.to(this.villa.villaOverviewGroup.rotation, {
+            y: -Math.PI * 1.35,
+            duration: 18,
+            ease: 'none'
+        }, 52);
+        tl.to(this.villa.targetCameraPos, {
+            x: -2.5,
+            y: 4.8,
+            z: 6.5,
+            duration: 18,
+            ease: 'none'
+        }, 52);
+        tl.to(this.villa.targetLookAt, {
+            x: -2.0,
+            y: 2.2,
+            z: -1.0,
+            duration: 18,
+            ease: 'none'
+        }, 52);
 
-        tl.to(this.villa.camera.position, {
-            z: 11,
-            y: 4.5,
-            duration: 20,
-        }, 55);
+        // ── Phase 5 (70% - 88%): Sunken Living Lounge, Courtyard Tree & Fluted Wall ──
+        tl.to(this.villa.villaOverviewGroup.rotation, {
+            y: -Math.PI * 1.85,
+            duration: 18,
+            ease: 'none'
+        }, 70);
+        tl.to(this.villa.targetCameraPos, {
+            x: -0.5,
+            y: 2.8,
+            z: 6.8,
+            duration: 18,
+            ease: 'none'
+        }, 70);
+        tl.to(this.villa.targetLookAt, {
+            x: -1.2,
+            y: 1.0,
+            z: -0.8,
+            duration: 18,
+            ease: 'none'
+        }, 70);
 
-        // Phase 5: Top-down view (75% - 90%)
-        tl.to(this.villa.resortGroup.rotation, {
-            y: -Math.PI * 2,
-            duration: 15,
-        }, 75);
+        // ── Phase 6 (88% - 100%): Full Architectural Orbit & Sea Horizon Panorama ──
+        tl.to(this.villa.villaOverviewGroup.rotation, {
+            y: -Math.PI * 2.1,
+            duration: 12,
+            ease: 'none'
+        }, 88);
+        tl.to(this.villa.targetCameraPos, {
+            x: 0,
+            y: 5.5,
+            z: 13.0,
+            duration: 12,
+            ease: 'none'
+        }, 88);
+        tl.to(this.villa.targetLookAt, {
+            x: 0,
+            y: 1.8,
+            z: 0,
+            duration: 12,
+            ease: 'none'
+        }, 88);
 
-        tl.to(this.villa.camera.position, {
-            z: 8,
-            y: 12,
-            duration: 15,
-        }, 75);
-
-        // Phase 6: Final sweep back to front (90% - 100%)
-        tl.to(this.villa.resortGroup.rotation, {
-            y: -Math.PI * 2.25,
-            duration: 10,
-        }, 90);
-
-        tl.to(this.villa.camera.position, {
-            z: 14,
-            y: 5,
-            duration: 10,
-        }, 90);
-
-        // ── Canvas visibility based on scroll ──
+        // Canvas Opacity fade based on scroll viewport
         ScrollTrigger.create({
             trigger: cottagesSection,
-            start: 'top 80%',
-            end: 'bottom 20%',
-            onEnter: () => {
-                gsap.to('#villa-canvas', { opacity: 1, duration: 1 });
-            },
-            onLeave: () => {
-                gsap.to('#villa-canvas', { opacity: 0.15, duration: 1 });
-            },
-            onEnterBack: () => {
-                gsap.to('#villa-canvas', { opacity: 1, duration: 1 });
-            },
-            onLeaveBack: () => {
-                gsap.to('#villa-canvas', { opacity: 0.15, duration: 1 });
-            }
+            start: 'top 85%',
+            end: 'bottom 15%',
+            onEnter: () => gsap.to('#villa-canvas', { opacity: 1, duration: 0.8 }),
+            onLeave: () => gsap.to('#villa-canvas', { opacity: 0.12, duration: 0.8 }),
+            onEnterBack: () => gsap.to('#villa-canvas', { opacity: 1, duration: 0.8 }),
+            onLeaveBack: () => gsap.to('#villa-canvas', { opacity: 0.12, duration: 0.8 })
         });
-
-        // Set initial low opacity for canvas
-        gsap.set('#villa-canvas', { opacity: 0.15 });
     }
 
-    /* ── Info Panel Visibility Based on Scroll Progress ── */
+    /* ── Info Panel Visibility Breakdown ── */
     updateInfoPanels(progress) {
-        // Define when each panel should appear
-        const panels = [
-            { id: 'front', start: 0.02, end: 0.14 },
-            { id: 'right', start: 0.18, end: 0.33 },
-            { id: 'back',  start: 0.38, end: 0.53 },
-            { id: 'left',  start: 0.58, end: 0.73 },
-            { id: 'top',   start: 0.77, end: 0.88 },
+        const ranges = [
+            { id: 'front',        start: 0.02, end: 0.16 },
+            { id: 'right',        start: 0.18, end: 0.32 },
+            { id: 'exploded',     start: 0.35, end: 0.48 },
+            { id: 'masterSuite',  start: 0.50, end: 0.63 },
+            { id: 'washroom',     start: 0.65, end: 0.78 },
+            { id: 'lounge',       start: 0.80, end: 0.94 }
         ];
 
-        panels.forEach(({ id, start, end }) => {
+        ranges.forEach(({ id, start, end }) => {
             const panel = this.infoPanels[id];
             if (!panel) return;
 
@@ -158,188 +219,62 @@ class ScrollAnimationController {
         });
     }
 
-    /* ── Section Reveal Animations ── */
+    /* ── Content Section Reveals ── */
     setupSectionReveals() {
-        // About section
-        gsap.from('#about .section-header', {
-            scrollTrigger: {
-                trigger: '#about',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 60,
-            opacity: 0,
-            duration: 1,
-            ease: 'power3.out',
-        });
+        const fadeConfigs = [
+            { trigger: '#about',        header: '#about .section-header',   elements: '#about .about-text, #about .about-image' },
+            { trigger: '#blueprint',    header: '#blueprint .section-header', elements: '#blueprint .blueprint-wrapper, #blueprint .blueprint-sidebar' },
+            { trigger: '#cottages',     header: '#cottages .section-header',  elements: '#cottages .villa-controls' },
+            { trigger: '#moodboard',    header: '#moodboard .section-header', elements: '#moodboard .moodboard-grid' },
+            { trigger: '#gallery',      header: '#gallery .section-header',  elements: '#gallery .gallery-grid' },
+            { trigger: '#amenities',    header: '#amenities .section-header', elements: '#amenities .amenity-card' },
+            { trigger: '#contact',      header: '#contact .section-header',   elements: '#contact .contact-grid' }
+        ];
 
-        gsap.from('#about .about-text', {
-            scrollTrigger: {
-                trigger: '#about .about-grid',
-                start: 'top 65%',
-                toggleActions: 'play none none reverse',
-            },
-            x: -60,
-            opacity: 0,
-            duration: 1,
-            ease: 'power3.out',
-        });
+        fadeConfigs.forEach(cfg => {
+            if (document.querySelector(cfg.trigger)) {
+                gsap.from(cfg.header, {
+                    scrollTrigger: {
+                        trigger: cfg.trigger,
+                        start: 'top 75%',
+                        toggleActions: 'play none none reverse'
+                    },
+                    y: 40,
+                    opacity: 0,
+                    duration: 0.9,
+                    ease: 'power3.out'
+                });
 
-        gsap.from('#about .about-image', {
-            scrollTrigger: {
-                trigger: '#about .about-grid',
-                start: 'top 65%',
-                toggleActions: 'play none none reverse',
-            },
-            x: 60,
-            opacity: 0,
-            duration: 1,
-            delay: 0.2,
-            ease: 'power3.out',
-        });
-
-        gsap.from('#about .stat', {
-            scrollTrigger: {
-                trigger: '#about .about-stats',
-                start: 'top 80%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 30,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: 'power3.out',
-        });
-
-        // Cottages section header
-        gsap.from('#cottages .section-header', {
-            scrollTrigger: {
-                trigger: '#cottages',
-                start: 'top 60%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 60,
-            opacity: 0,
-            duration: 1,
-            ease: 'power3.out',
-        });
-
-        // Gallery
-        gsap.from('#gallery .section-header', {
-            scrollTrigger: {
-                trigger: '#gallery',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 60,
-            opacity: 0,
-            duration: 1,
-            ease: 'power3.out',
-        });
-
-        gsap.from('#gallery .gallery-item', {
-            scrollTrigger: {
-                trigger: '#gallery .gallery-grid',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.12,
-            ease: 'power3.out',
-        });
-
-        // Video
-        gsap.from('#video-section .video-container', {
-            scrollTrigger: {
-                trigger: '#video-section',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 60,
-            opacity: 0,
-            scale: 0.95,
-            duration: 1,
-            ease: 'power3.out',
-        });
-
-        // Amenities
-        gsap.from('#amenities .section-header', {
-            scrollTrigger: {
-                trigger: '#amenities',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 60,
-            opacity: 0,
-            duration: 1,
-            ease: 'power3.out',
-        });
-
-        gsap.from('#amenities .amenity-card', {
-            scrollTrigger: {
-                trigger: '#amenities .amenities-grid',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: 'power3.out',
-        });
-
-        // Contact
-        gsap.from('#contact .section-header', {
-            scrollTrigger: {
-                trigger: '#contact',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            y: 60,
-            opacity: 0,
-            duration: 1,
-            ease: 'power3.out',
-        });
-
-        gsap.from('#contact .contact-info', {
-            scrollTrigger: {
-                trigger: '#contact .contact-grid',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            x: -60,
-            opacity: 0,
-            duration: 1,
-            ease: 'power3.out',
-        });
-
-        gsap.from('#contact .contact-form', {
-            scrollTrigger: {
-                trigger: '#contact .contact-grid',
-                start: 'top 70%',
-                toggleActions: 'play none none reverse',
-            },
-            x: 60,
-            opacity: 0,
-            duration: 1,
-            delay: 0.2,
-            ease: 'power3.out',
+                if (cfg.elements) {
+                    gsap.from(cfg.elements, {
+                        scrollTrigger: {
+                            trigger: cfg.trigger,
+                            start: 'top 65%',
+                            toggleActions: 'play none none reverse'
+                        },
+                        y: 35,
+                        opacity: 0,
+                        duration: 0.9,
+                        stagger: 0.12,
+                        ease: 'power3.out'
+                    });
+                }
+            }
         });
     }
 
-    /* ── Nav Active State ── */
+    /* ── Nav Highlighting ── */
     setupNavHighlighting() {
-        const sections = ['hero', 'about', 'cottages', 'gallery', 'amenities', 'contact'];
-
+        const sections = ['hero', 'about', 'blueprint', 'cottages', 'moodboard', 'gallery', 'amenities', 'contact'];
         sections.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
             ScrollTrigger.create({
-                trigger: `#${id}`,
+                trigger: el,
                 start: 'top 40%',
                 end: 'bottom 40%',
                 onEnter: () => this.setActiveNav(id),
-                onEnterBack: () => this.setActiveNav(id),
+                onEnterBack: () => this.setActiveNav(id)
             });
         });
     }
